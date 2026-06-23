@@ -1,70 +1,80 @@
 # Immich MCP Server
 
-A Model Context Protocol (MCP) server that acts as a secure proxy between an AI Assistant and the [Immich](https://immich.app) backend API. Exposes **114 MCP tools** covering 16 resource domains with full CRUD, search, timeline, map, and administration capabilities.
+This repository contains a Model Context Protocol (MCP) server that acts
+as a secure, multi-tenant proxy between an AI Assistant and the Immich
+backend API. It exposes **114 MCP tools** covering 16 resource domains
+with full CRUD, search, timeline, map, and relationship management.
 
-**Test Status**: 133 tests · 133 passing · 0 failing ✅
+## ✨ Features
 
-## Features
+- **🔑 Identity Passthrough** — Extracts the `Authorization: Bearer <token>`
+  header from incoming HTTP requests and forwards it to the Immich API
+  without server-side authentication.
+- **👥 Multi-Tenancy** — Uses Python `contextvars` to maintain thread-safe
+  user identity isolation, ensuring all AI-driven actions are scoped to
+  the authenticated user's permissions.
+- **📊 Full Immich Coverage** — 114 tools mapped to Immich API endpoints
+  across 16 resource domains.
+- **⚡ TOON Optimization** — Bulk list responses are automatically compressed
+  using TOON (Token-Optimized Object Notation) to reduce token consumption
+  and maximize context window efficiency.
+- **⚡ Efficient Gets** — GET responses return only commonly used fields by
+  default. Full objects are available via an `include_all_fields` flag.
+- **🧪 Comprehensive Testing** — 133 automated tests covering all tool
+  domains, run via the test runner pipeline. **133 passing · 0 failing.**
 
-- **Identity Passthrough** — Extracts `Authorization: Bearer <token>` from incoming requests and forwards as `x-api-key` to the Immich API.
-- **Multi-Tenancy** — Thread-safe user identity isolation via Python `contextvars`.
-- **TOON Optimization** — Bulk list responses automatically compressed using TOON (Token-Optimized Object Notation) to reduce token consumption by 30–60%.
-- **Efficient Gets** — GET responses return only commonly used fields by default. Full objects via `include_all_fields` flag.
-
-## Environment Variables
+## 🔧 Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `IMMICH_BASE_URL` | Yes | Docker-internal URL of the Immich API (e.g. `http://immich-app:2283/api`) |
 | `MCP_SERVER_PORT` | Yes | Port number the MCP server listens on |
-| `ALLOW_ALL_AGGREGATE` | No | When `true`, aggregate listing tools honor `include_all_fields`. When `false` (default), the parameter is silently forced to `False`. |
+| `ALLOW_ALL_AGGREGATE` | No | When `true`, aggregate listing tools honor the `include_all_fields` parameter. When `false` (default), the parameter is silently forced to `False` for aggregate list operations. |
 
-## Installation & Local Development
+## 📦 Installation & Local Development
 
-```bash
-pip install fastmcp httpx pydantic uvicorn toon-mcp-server
-export IMMICH_BASE_URL=http://localhost:2283
-export MCP_SERVER_PORT=6042
-python -m src.main
-```
+1. Ensure you have Python 3.12+ installed.
+2. Install dependencies:
+    ```bash
+    pip install fastmcp httpx pydantic uvicorn toon-mcp-server
+    ```
+3. Run the server:
+    ```bash
+    export IMMICH_BASE_URL=http://localhost:2283/api
+    export MCP_SERVER_PORT=6042
+    python -m src.main
+    ```
 
-## Docker Deployment
+## 🐳 Docker Deployment
+
+Build and run the server using Docker:
 
 ```bash
 docker build -t immich-mcp:latest .
 docker run -d --name immich-mcp --network dock-ext \
     -e IMMICH_BASE_URL="http://immich-app:2283/api" \
     -e MCP_SERVER_PORT=6042 \
-    -p 6042:6042 \
     immich-mcp:latest
+
+The MCP server serves at `http://immich-mcp:6042/mcp` (Streamable HTTP).
 ```
 
-Serves at `http://immich-mcp:6042/mcp` (Streamable HTTP).
+## ⚠️ Important Notes
 
-## Important Notes
+- **📋 `include_all_fields`** — The `include_all_fields` parameter (available
+  on all `get_*` and `list_*` tools) controls whether all available fields
+  are included in responses. Defaults to `False` for performance; set to
+  `True` only when additional fields are needed.
+- **⚡ TOON Compression** — All bulk list responses are automatically
+  compressed using TOON to reduce token consumption by 30–60%.
+- **📝 Required Fields & Defaults** — Each `create_*` tool requires specific
+  key fields. All other fields default to empty strings or reasonable values.
+  The owner/user assignment field is automatically set to the authenticated
+  user for most resources.
 
-- **`include_all_fields`** — Available on all `get_*` and `get_by_id` tools. Defaults to `False` for performance.
-- **TOON Compression** — All bulk list responses are automatically compressed using TOON to reduce token consumption.
-- **Binary Endpoints** — Thumbnail, original file, and profile image endpoints return a URL rather than binary data.
-- **Required Fields** — Each `create_*` tool requires specific key fields; optional fields default to empty strings or reasonable values.
+## 🛠️ API Tool Mapping
 
-## API Tool Mapping
-
-The server implements 114 MCP tools organized into 16 resource domains:
-
-### 🖥️ Server (11 tools)
-
-- `get_server_ping` — Ping the server
-- `get_server_version` — Get server version
-- `get_server_about` — Get server info
-- `get_server_config` — Get server configuration
-- `get_server_features` — Get feature flags
-- `get_server_statistics` — Get server statistics
-- `get_server_storage` — Get storage information
-- `get_server_media_types` — Get supported media types
-- `get_server_version_check` — Get version check status
-- `get_server_version_history` — Get version history
-- `get_server_apk_links` — Get APK download links
+The server implements 114 MCP tools organized into the following categories:
 
 ### 🖼️ Asset Management (14 tools)
 
@@ -83,7 +93,7 @@ The server implements 114 MCP tools organized into 16 resource domains:
 - `bulk_update_assets` — Update multiple assets
 - `copy_asset` — Copy asset metadata
 
-### 📁 Album Management (11 tools)
+### 💿 Album Management (11 tools)
 
 - `get_all_albums` — List all albums
 - `get_album_by_id` — Get a single album
@@ -143,7 +153,7 @@ The server implements 114 MCP tools organized into 16 resource domains:
 - `add_assets_to_memory` — Add assets to a memory
 - `get_memory_statistics` — Get memory statistics
 
-### 🗂️ Stack Management (6 tools)
+### 🗃️ Stack Management (6 tools)
 
 - `get_all_stacks` — List all stacks
 - `get_stack_by_id` — Get a single stack
@@ -174,6 +184,20 @@ The server implements 114 MCP tools organized into 16 resource domains:
 - `update_partner` — Update partner visibility
 - `delete_partner_by_id` — Remove a partner
 
+### 🖥️  Server (11 tools)
+
+- `get_server_ping` — Ping the server
+- `get_server_version` — Get server version
+- `get_server_about` — Get server info
+- `get_server_config` — Get server configuration
+- `get_server_features` — Get feature flags
+- `get_server_statistics` — Get server statistics
+- `get_server_storage` — Get storage information
+- `get_server_media_types` — Get supported media types
+- `get_server_version_check` — Get version check status
+- `get_server_version_history` — Get version history
+- `get_server_apk_links` — Get APK download links
+
 ### 🔍 Search (5 tools)
 
 - `search_metadata` — Search assets by metadata
@@ -182,7 +206,7 @@ The server implements 114 MCP tools organized into 16 resource domains:
 - `search_explore` — Explore data by city
 - `search_cities` — Assets grouped by city
 
-### 🗺️ Timeline & Map (4 tools)
+### 🗺️  Timeline & Map (4 tools)
 
 - `get_time_buckets` — Get timeline buckets
 - `get_time_bucket` — Get assets in a bucket
@@ -197,7 +221,7 @@ The server implements 114 MCP tools organized into 16 resource domains:
 - `restore_trash` — Restore all trashed assets
 - `restore_trash_assets` — Restore specific trashed assets
 
-### ⚙️ System Config (3 tools)
+### ⚙️  System Config (3 tools)
 
 - `get_system_config` — Get system configuration
 - `get_system_config_defaults` — Get configuration defaults
