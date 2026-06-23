@@ -41,7 +41,7 @@ with full CRUD, search, timeline, map, and relationship management.
 3. Run the server:
     ```bash
     export IMMICH_BASE_URL=http://localhost:2283/api
-    export MCP_SERVER_PORT=6042
+    export MCP_SERVER_PORT=80
     python -m src.main
     ```
 
@@ -53,10 +53,10 @@ Build and run the server using Docker:
 docker build -t immich-mcp:latest .
 docker run -d --name immich-mcp --network dock-ext \
     -e IMMICH_BASE_URL="http://immich-app:2283/api" \
-    -e MCP_SERVER_PORT=6042 \
+    -e MCP_SERVER_PORT=80 \
     immich-mcp:latest
 
-The MCP server serves at `http://immich-mcp:6042/mcp` (Streamable HTTP).
+The MCP server serves at `http://immich-mcp:80/mcp` (Streamable HTTP).
 ```
 
 ## ⚠️ Important Notes
