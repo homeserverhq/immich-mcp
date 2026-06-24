@@ -674,6 +674,7 @@ async def get_all_assets(
     ctx: Context,
     page: int = 1,
     size: int = 100,
+    include_all_fields: bool = False,
     type: Optional[str] = None,
     isFavorite: Optional[bool] = None,
     isMotion: Optional[bool] = None,
@@ -701,6 +702,8 @@ async def get_all_assets(
     Args:
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 100.
+        include_all_fields: When False (default), each asset contains only
+            commonly used fields. Set to True to include all fields.
         type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
         isFavorite: Filter by favorite status.
         isMotion: Filter by motion photo.
@@ -745,7 +748,9 @@ async def get_all_assets(
     if withExif: payload["withExif"] = True
     if withPeople: payload["withPeople"] = True
     if withStacked: payload["withStacked"] = True
-    return await get_client().search_metadata(payload, get_user_token())
+    return await get_client().search_metadata(
+        payload, get_user_token(), include_all_fields=include_all_fields
+    )
 
 @mcp.tool()
 async def get_assets_by_tag(
@@ -753,6 +758,7 @@ async def get_assets_by_tag(
     ctx: Context,
     page: int = 1,
     size: int = 100,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get all assets that have a specific tag.
 
@@ -760,8 +766,13 @@ async def get_assets_by_tag(
         tagId: The unique ID of the tag (required).
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 100.
+        include_all_fields: When False (default), each asset contains only
+            commonly used fields. Set to True to include all fields.
     """
-    return await get_client().get_assets_by_tag(tagId, get_user_token(), page=page, size=size)
+    return await get_client().get_assets_by_tag(
+        tagId, get_user_token(), page=page, size=size,
+        include_all_fields=include_all_fields,
+    )
 
 @mcp.tool()
 async def get_album_assets(
@@ -769,6 +780,7 @@ async def get_album_assets(
     ctx: Context,
     page: int = 1,
     size: int = 100,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get all assets in an album.
 
@@ -776,20 +788,30 @@ async def get_album_assets(
         albumId: The unique ID of the album (required).
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 100.
+        include_all_fields: When False (default), each asset contains only
+            commonly used fields. Set to True to include all fields.
     """
-    return await get_client().get_album_assets(albumId, get_user_token(), page=page, size=size)
+    return await get_client().get_album_assets(
+        albumId, get_user_token(), page=page, size=size,
+        include_all_fields=include_all_fields,
+    )
 
 @mcp.tool()
 async def get_memory_assets(
     memoryId: str,
     ctx: Context,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get all assets in a memory.
 
     Args:
         memoryId: The unique ID of the memory (required).
+        include_all_fields: When False (default), each asset contains only
+            commonly used fields. Set to True to include all fields.
     """
-    data = await get_client().get_memory_assets(memoryId, get_user_token())
+    data = await get_client().get_memory_assets(
+        memoryId, get_user_token(), include_all_fields=include_all_fields,
+    )
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool()
@@ -2307,6 +2329,7 @@ async def get_people_assets(
     personIds: str,
     page: int = 1,
     size: int = 100,
+    include_all_fields: bool = False,
     type: Optional[str] = None,
     isFavorite: Optional[bool] = None,
 ) -> dict[str, Any]:
@@ -2316,6 +2339,8 @@ async def get_people_assets(
         personIds: Comma-separated person IDs (required).
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 100.
+        include_all_fields: When False (default), each asset contains only
+            commonly used fields. Set to True to include all fields.
         type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
         isFavorite: Filter by favorite status.
     """
@@ -2325,7 +2350,9 @@ async def get_people_assets(
         payload["personIds"] = pid_list
     if type: payload["type"] = type
     if isFavorite is not None: payload["isFavorite"] = isFavorite
-    return await get_client().search_metadata(payload, get_user_token())
+    return await get_client().search_metadata(
+        payload, get_user_token(), include_all_fields=include_all_fields,
+    )
 
 # =============================================================================
 # Timeline & Map Tools

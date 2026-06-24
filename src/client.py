@@ -22,23 +22,17 @@ def _normalize_datetime(value: str) -> str:
 
 COMMON_FIELDS = {
     "asset": {"id", "type", "originalFileName", "originalMimeType", "fileCreatedAt",
-              "isFavorite", "isArchived", "isTrashed", "ownerId", "libraryId",
-              "thumbhash", "resized", "hasMetadata", "localDateTime", "originalPath"},
-    "album": {"id", "albumName", "description", "assetCount", "ownerId",
-              "createdAt", "updatedAt", "shared", "hasSharedLink",
-              "isActivityEnabled", "albumThumbnailAssetId", "order"},
-    "tag": {"id", "name", "value", "color", "parentId", "createdAt", "updatedAt"},
-    "person": {"id", "name", "thumbnailPath", "isFavorite", "isHidden", "color", "updatedAt"},
-    "library": {"id", "name", "ownerId", "assetCount", "importPaths", "exclusionPatterns",
-                "createdAt", "updatedAt", "refreshedAt"},
-    "memory": {"id", "type", "isSaved", "memoryAt", "ownerId", "createdAt",
-               "seenAt", "showAt", "hideAt", "deletedAt"},
+              "ownerId", "isFavorite"},
+    "album": {"id", "albumName", "description", "assetCount", "ownerId", "createdAt"},
+    "tag": {"id", "name", "value", "color", "parentId"},
+    "person": {"id", "name", "color"},
+    "library": {"id", "name", "ownerId", "assetCount", "importPaths"},
+    "memory": {"id", "type", "memoryAt", "ownerId"},
     "stack": {"id", "primaryAssetId", "assets"},
-    "shared_link": {"id", "type", "userId", "description", "allowDownload", "allowUpload",
-                    "showMetadata", "createdAt", "expiresAt", "slug"},
+    "shared_link": {"id", "type", "userId", "description", "allowDownload", "allowUpload", "slug"},
     "activity": {"id", "type", "userId", "assetId", "albumId", "comment", "createdAt"},
-    "partner": {"id", "name", "email", "avatarColor", "inTimeline"},
-    "user": {"id", "name", "email", "avatarColor", "profileImagePath", "profileChangedAt"},
+    "partner": {"id", "name", "email", "inTimeline"},
+    "user": {"id", "name", "email"},
     "duplicate": {"id", "assetIds", "assets"},
     "queue": {"name", "queueStatus", "jobCounts"},
 }
@@ -50,6 +44,15 @@ def _filter_fields(data: Any, common_set: set[str]) -> Any:
         return {k: v for k, v in data.items() if k in common_set}
     if isinstance(data, list):
         return [_filter_fields(item, common_set) for item in data]
+    return data
+
+
+def _filter_search_assets(data: Any, common_set: set[str]) -> Any:
+    """Filter assets.items inside a search/metadata response."""
+    if isinstance(data, dict) and "assets" in data:
+        assets = data.get("assets", {})
+        if isinstance(assets, dict) and "items" in assets:
+            data = {**data, "assets": {**assets, "items": _filter_fields(assets["items"], common_set)}}
     return data
 
 
@@ -174,10 +177,10 @@ class ImmichClient:
         return await self.get(f"/assets/{asset_id}/edits", api_key)
 
     async def get_asset_thumbnail_url(self, asset_id: str, api_key: Optional[str] = None) -> str:
-        return f"{self.public_url}/assets/{asset_id}/thumbnail"
+        return f"{self.public_url}/api/assets/{asset_id}/thumbnail"
 
     async def get_asset_original_url(self, asset_id: str, api_key: Optional[str] = None) -> str:
-        return f"{self.public_url}/assets/{asset_id}/original"
+        return f"{self.public_url}/api/assets/{asset_id}/original"
 
     async def update_asset(self, asset_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.put(f"/assets/{asset_id}", api_key, json=payload)
@@ -213,31 +216,43 @@ class ImmichClient:
         return await self.get(f"/assets/{asset_id}/video/playback", api_key)
 
     async def get_asset_video_url(self, asset_id: str, api_key: Optional[str] = None) -> str:
-        return f"{self.public_url}/assets/{asset_id}/video/playback"
+        return f"{self.public_url}/api/assets/{asset_id}/video/playback"
 
     async def get_assets_by_tag(
         self, tag_id: str, api_key: Optional[str] = None,
         page: int = 1, size: int = 100,
+        include_all_fields: bool = False,
     ) -> Any:
-        return await self.post(
+        data = await self.post(
             "/search/metadata", api_key,
             json={"tagIds": [tag_id], "page": page, "size": size},
         )
+        if not include_all_fields:
+            data = _filter_search_assets(data, COMMON_FIELDS["asset"])
+        return data
 
     async def get_album_assets(
         self, album_id: str, api_key: Optional[str] = None,
         page: int = 1, size: int = 100,
+        include_all_fields: bool = False,
     ) -> Any:
-        return await self.post(
+        data = await self.post(
             "/search/metadata", api_key,
             json={"albumIds": [album_id], "page": page, "size": size},
         )
+        if not include_all_fields:
+            data = _filter_search_assets(data, COMMON_FIELDS["asset"])
+        return data
 
     async def get_memory_assets(
         self, memory_id: str, api_key: Optional[str] = None,
+        include_all_fields: bool = False,
     ) -> Any:
         data = await self.get(f"/memories/{memory_id}", api_key)
-        return data.get("assets", [])
+        assets = data.get("assets", [])
+        if not include_all_fields:
+            assets = _filter_fields(assets, COMMON_FIELDS["asset"])
+        return assets
 
     async def upload_asset(
         self,
@@ -426,7 +441,7 @@ class ImmichClient:
         return await self.get(f"/people/{person_id}/statistics", api_key)
 
     async def get_person_thumbnail_url(self, person_id: str, api_key: Optional[str] = None) -> str:
-        return f"{self.public_url}/people/{person_id}/thumbnail"
+        return f"{self.public_url}/api/people/{person_id}/thumbnail"
 
     async def get_faces_by_asset(self, asset_id: str, api_key: Optional[str] = None) -> Any:
         return await self.get(f"/faces?id={asset_id}", api_key)
@@ -650,8 +665,14 @@ class ImmichClient:
     # Search Domain
     # ==========================================================================
 
-    async def search_metadata(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/search/metadata", api_key, json=payload)
+    async def search_metadata(
+        self, payload: dict, api_key: Optional[str] = None,
+        include_all_fields: bool = False,
+    ) -> Any:
+        data = await self.post("/search/metadata", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_search_assets(data, COMMON_FIELDS["asset"])
+        return data
 
     async def search_smart(self, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.post("/search/smart", api_key, json=payload)
@@ -794,7 +815,7 @@ class ImmichClient:
         return await self.delete("/users/me/onboarding", api_key)
 
     async def get_user_profile_image_url(self, user_id: str, api_key: Optional[str] = None) -> str:
-        return f"{self.public_url}/users/{user_id}/profile-image"
+        return f"{self.public_url}/api/users/{user_id}/profile-image"
 
     async def delete_profile_image(self, api_key: Optional[str] = None) -> Any:
         return await self.delete("/users/profile-image", api_key)
