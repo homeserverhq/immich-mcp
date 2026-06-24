@@ -18,7 +18,7 @@ with full CRUD, search, timeline, map, and relationship management.
 - **⚡ TOON Optimization** — Bulk list responses are automatically compressed
   using TOON (Token-Optimized Object Notation) to reduce token consumption
   and maximize context window efficiency.
-- **⚡ Efficient Gets** — GET responses return only commonly used fields by
+- **🚀 Efficient Gets** — GET responses return only commonly used fields by
   default. Full objects are available via an `include_all_fields` flag.
 - **🧪 Comprehensive Testing** — 147 automated tests covering all tool
   domains, run via the test runner pipeline.
