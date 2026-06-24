@@ -215,6 +215,30 @@ class ImmichClient:
     async def get_asset_video_url(self, asset_id: str, api_key: Optional[str] = None) -> str:
         return f"{self.public_url}/assets/{asset_id}/video/playback"
 
+    async def get_assets_by_tag(
+        self, tag_id: str, api_key: Optional[str] = None,
+        page: int = 1, size: int = 100,
+    ) -> Any:
+        return await self.post(
+            "/search/metadata", api_key,
+            json={"tagIds": [tag_id], "page": page, "size": size},
+        )
+
+    async def get_album_assets(
+        self, album_id: str, api_key: Optional[str] = None,
+        page: int = 1, size: int = 100,
+    ) -> Any:
+        return await self.post(
+            "/search/metadata", api_key,
+            json={"albumIds": [album_id], "page": page, "size": size},
+        )
+
+    async def get_memory_assets(
+        self, memory_id: str, api_key: Optional[str] = None,
+    ) -> Any:
+        data = await self.get(f"/memories/{memory_id}", api_key)
+        return data.get("assets", [])
+
     async def upload_asset(
         self,
         base64_data: str,

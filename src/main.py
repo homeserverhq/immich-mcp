@@ -232,7 +232,7 @@ class CopyAssetParam(BaseModel):
 
 class SearchMetadataParam(BaseModel):
     page: int = 1
-    size: int = 50
+    size: int = 100
     type: Optional[str] = None
     query: Optional[str] = None
     isFavorite: Optional[bool] = None
@@ -278,7 +278,7 @@ class SearchMetadataParam(BaseModel):
 class SmartSearchParam(BaseModel):
     query: str
     page: int = 1
-    size: int = 50
+    size: int = 100
     type: Optional[str] = None
     isFavorite: Optional[bool] = None
     isArchived: Optional[bool] = None
@@ -673,7 +673,7 @@ stack: bool = False,
 async def get_all_assets(
     ctx: Context,
     page: int = 1,
-    size: int = 50,
+    size: int = 100,
     type: Optional[str] = None,
     isFavorite: Optional[bool] = None,
     isMotion: Optional[bool] = None,
@@ -700,7 +700,7 @@ async def get_all_assets(
 
     Args:
         page: Page number. Defaults to 1.
-        size: Number of results per page. Defaults to 50.
+        size: Number of results per page. Defaults to 100.
         type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
         isFavorite: Filter by favorite status.
         isMotion: Filter by motion photo.
@@ -746,6 +746,51 @@ async def get_all_assets(
     if withPeople: payload["withPeople"] = True
     if withStacked: payload["withStacked"] = True
     return await get_client().search_metadata(payload, get_user_token())
+
+@mcp.tool()
+async def get_assets_by_tag(
+    tagId: str,
+    ctx: Context,
+    page: int = 1,
+    size: int = 100,
+) -> dict[str, Any]:
+    """Get all assets that have a specific tag.
+
+    Args:
+        tagId: The unique ID of the tag (required).
+        page: Page number. Defaults to 1.
+        size: Number of results per page. Defaults to 100.
+    """
+    return await get_client().get_assets_by_tag(tagId, get_user_token(), page=page, size=size)
+
+@mcp.tool()
+async def get_album_assets(
+    albumId: str,
+    ctx: Context,
+    page: int = 1,
+    size: int = 100,
+) -> dict[str, Any]:
+    """Get all assets in an album.
+
+    Args:
+        albumId: The unique ID of the album (required).
+        page: Page number. Defaults to 1.
+        size: Number of results per page. Defaults to 100.
+    """
+    return await get_client().get_album_assets(albumId, get_user_token(), page=page, size=size)
+
+@mcp.tool()
+async def get_memory_assets(
+    memoryId: str,
+    ctx: Context,
+) -> dict[str, Any]:
+    """Get all assets in a memory.
+
+    Args:
+        memoryId: The unique ID of the memory (required).
+    """
+    data = await get_client().get_memory_assets(memoryId, get_user_token())
+    return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool()
 async def upload_asset(
@@ -2046,7 +2091,7 @@ withStacked: bool = False,
 
     Args:
         page: Page number. Defaults to 1.
-        size: Number of results per page. Defaults to 50.
+        size: Number of results per page. Defaults to 100.
         query: General search query.
         type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
         isFavorite: Filter by favorite status.
@@ -2118,7 +2163,7 @@ libraryId: Optional[str] = None,
     Args:
         query: Natural language search query (required).
         page: Page number. Defaults to 1.
-        size: Number of results per page. Defaults to 50.
+        size: Number of results per page. Defaults to 100.
         type: Asset type.
         isFavorite: Filter by favorite.
         city: Filter by city.
@@ -2176,7 +2221,7 @@ async def search_cities(ctx: Context) -> dict[str, Any]:
 @mcp.tool()
 async def search_random(
     ctx: Context,
-    size: int = 50,
+    size: int = 100,
     type: Optional[str] = None,
     isFavorite: Optional[bool] = None,
     isMotion: Optional[bool] = None,
@@ -2194,7 +2239,7 @@ async def search_random(
     """Get a random selection of assets.
 
     Args:
-        size: Number of results to return. Defaults to 50.
+        size: Number of results to return. Defaults to 100.
         type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
         isFavorite: Filter by favorite status.
         isMotion: Filter by motion photo.
@@ -2261,7 +2306,7 @@ async def get_people_assets(
     ctx: Context,
     personIds: str,
     page: int = 1,
-    size: int = 50,
+    size: int = 100,
     type: Optional[str] = None,
     isFavorite: Optional[bool] = None,
 ) -> dict[str, Any]:
@@ -2270,7 +2315,7 @@ async def get_people_assets(
     Args:
         personIds: Comma-separated person IDs (required).
         page: Page number. Defaults to 1.
-        size: Number of results per page. Defaults to 50.
+        size: Number of results per page. Defaults to 100.
         type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
         isFavorite: Filter by favorite status.
     """

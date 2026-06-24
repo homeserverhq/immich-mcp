@@ -2,7 +2,7 @@
 
 This repository contains a Model Context Protocol (MCP) server that acts
 as a secure, multi-tenant proxy between an AI Assistant and the Immich
-backend API. It exposes **125 MCP tools** covering 16 resource domains
+backend API. It exposes **128 MCP tools** covering 16 resource domains
 with full CRUD, search, timeline, map, and relationship management.
 
 ## ✨ Features
@@ -13,14 +13,14 @@ with full CRUD, search, timeline, map, and relationship management.
 - **👥 Multi-Tenancy** — Uses Python `contextvars` to maintain thread-safe
   user identity isolation, ensuring all AI-driven actions are scoped to
   the authenticated user's permissions.
-- **📊 Full Immich Coverage** — 125 tools mapped to Immich API endpoints
+- **📊 Full Immich Coverage** — 128 tools mapped to Immich API endpoints
   across 16 resource domains.
 - **⚡ TOON Optimization** — Bulk list responses are automatically compressed
   using TOON (Token-Optimized Object Notation) to reduce token consumption
   and maximize context window efficiency.
 - **⚡ Efficient Gets** — GET responses return only commonly used fields by
   default. Full objects are available via an `include_all_fields` flag.
-- **🧪 Comprehensive Testing** — 144 automated tests covering all tool
+- **🧪 Comprehensive Testing** — 147 automated tests covering all tool
   domains, run via the test runner pipeline.
 
 ## 🔧 Environment Variables
@@ -77,9 +77,9 @@ The MCP server serves at `http://immich-mcp:80/mcp` (Streamable HTTP).
 
 ## 🛠️ API Tool Mapping
 
-The server implements 125 MCP tools organized into the following categories:
+The server implements 128 MCP tools organized into the following categories:
 
-### 🖼️ Asset Management (18 tools)
+### 🖼️ Asset Management (21 tools)
 
 - `get_all_assets` — List all assets with pagination and filters
 - `get_asset_by_id` — Get a single asset by ID
@@ -99,8 +99,11 @@ The server implements 125 MCP tools organized into the following categories:
 - `bulk_update_assets` — Update multiple assets
 - `copy_asset` — Copy asset metadata
 - `upload_asset` — Upload an asset from base64 data
+- `get_assets_by_tag` — Get all assets that have a specific tag
+- `get_album_assets` — Get all assets in an album
+- `get_memory_assets` — Get all assets in a memory
 
-### 💿 Album Management (11 tools)
+### 💿 Album Management (12 tools)
 
 - `get_all_albums` — List all albums
 - `get_album_by_id` — Get a single album
@@ -114,7 +117,7 @@ The server implements 125 MCP tools organized into the following categories:
 - `get_album_statistics` — Get album statistics
 - `get_album_map_markers` — Get album map markers
 
-### 🏷️ Tag Management (9 tools)
+### 🏷️ Tag Management (10 tools)
 
 - `get_all_tags` — List all tags
 - `get_tag_by_id` — Get a single tag
@@ -151,7 +154,7 @@ The server implements 125 MCP tools organized into the following categories:
 - `scan_library` — Scan a library
 - `get_library_statistics` — Get library statistics
 
-### 💭 Memory Management (8 tools)
+### 💭 Memory Management (9 tools)
 
 - `get_all_memories` — List all memories
 - `get_memory_by_id` — Get a single memory
@@ -241,7 +244,7 @@ The server implements 125 MCP tools organized into the following categories:
 - `get_system_config_defaults` — Get configuration defaults
 - `get_storage_template_options` — Get storage template options
 
-### 👥 User & Account (9 tools)
+### 👥 User & Account (8 tools)
 
 - `get_all_users` — List all users
 - `get_user_by_id` — Get a user by ID
@@ -250,5 +253,4 @@ The server implements 125 MCP tools organized into the following categories:
 - `get_my_preferences` — Get user preferences
 - `update_my_preferences` — Update preferences
 - `get_user_profile_image_url` — Get profile image URL
-- `get_my_calendar_heatmap` — Get calendar heatmap activity
 - `delete_my_onboarding` — Reset onboarding

@@ -393,7 +393,7 @@ async def main():
         try:
             r = _httpx.post("http://localhost:2283/api/search/metadata",
                 headers={"x-api-key": API_KEY},
-                json={"page": 1, "size": 50})
+                json={"page": 1, "size": 100})
             data = r.json()
             items = data.get("assets", {}).get("items", [])
             ASSET_IDS = [item["id"] for item in items if item.get("id")]
@@ -663,6 +663,10 @@ async def main():
             {"id": act_album_id, "assetIds": ASSET_IDS[0]}
         )
         await run_test(
+            session, "E2b get_album_assets", "get_album_assets",
+            {"albumId": act_album_id, "page": 1, "size": 5}
+        )
+        await run_test(
             session, "E3 remove_assets_from_album", "remove_assets_from_album",
             {"id": act_album_id, "assetIds": ASSET_IDS[0]}
         )
@@ -699,6 +703,10 @@ async def main():
         await run_test(
             session, "F3 tag_assets_by_tag", "tag_assets_by_tag",
             {"id": rel_tag_id, "assetIds": ASSET_IDS[0]}
+        )
+        await run_test(
+            session, "F3b get_assets_by_tag", "get_assets_by_tag",
+            {"tagId": rel_tag_id, "page": 1, "size": 5}
         )
         await run_test(
             session, "F4 untag_assets", "untag_assets",
@@ -759,6 +767,10 @@ async def main():
         await run_test(
             session, "I1 add_assets_to_memory", "add_assets_to_memory",
             {"id": fresh_mem_id, "assetIds": ASSET_IDS[0]}
+        )
+        await run_test(
+            session, "I1b get_memory_assets", "get_memory_assets",
+            {"memoryId": fresh_mem_id}
         )
         await run_test(
             session, "I2 remove_assets_from_memory", "remove_assets_from_memory",
