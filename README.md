@@ -41,7 +41,7 @@ with full CRUD, search, timeline, map, and relationship management.
     ```
 3. Run the server:
     ```bash
-    export IMMICH_BASE_URL=http://localhost:2283
+    export IMMICH_BASE_URL=http://immich-app:2283
     export MCP_SERVER_PORT=80
     python -m src.main
     ```
