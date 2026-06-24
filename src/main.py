@@ -407,6 +407,20 @@ async def get_asset_statistics(ctx: Context) -> dict[str, Any]:
     return await get_client().get_asset_statistics(get_user_token())
 
 @mcp.tool()
+async def get_asset_exif(
+    id: str,
+    ctx: Context
+) -> dict[str, Any]:
+    """Get EXIF data for an asset.
+
+    Args:
+        id: The unique ID of the asset (required).
+    """
+    data = await get_client().get_asset_by_id(id, get_user_token(), include_all_fields=True)
+    exif = data.get("exifInfo", {})
+    return {"exifInfo": exif}
+
+@mcp.tool()
 async def get_asset_ocr(
     id: str,
     ctx: Context
@@ -482,6 +496,19 @@ async def get_asset_original_url(
         id: The unique ID of the asset (required).
     """
     url = await get_client().get_asset_original_url(id, get_user_token())
+    return {"url": url}
+
+@mcp.tool()
+async def get_asset_video_url(
+    id: str,
+    ctx: Context
+) -> dict[str, Any]:
+    """Get the URL to play an asset's video.
+
+    Args:
+        id: The unique ID of the asset (required).
+    """
+    url = await get_client().get_asset_video_url(id, get_user_token())
     return {"url": url}
 
 @mcp.tool()
@@ -640,6 +667,116 @@ stack: bool = False,
     )
     return await get_client().copy_asset(
         params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+    )
+
+@mcp.tool()
+async def get_all_assets(
+    ctx: Context,
+    page: int = 1,
+    size: int = 50,
+    type: Optional[str] = None,
+    isFavorite: Optional[bool] = None,
+    isMotion: Optional[bool] = None,
+    isOffline: Optional[bool] = None,
+    isNotInAlbum: Optional[bool] = None,
+    takenAfter: Optional[str] = None,
+    takenBefore: Optional[str] = None,
+    originalFileName: Optional[str] = None,
+    city: Optional[str] = None,
+    state: Optional[str] = None,
+    country: Optional[str] = None,
+    make: Optional[str] = None,
+    model: Optional[str] = None,
+    personIds: str = "",
+    tagIds: str = "",
+    albumIds: str = "",
+    libraryId: Optional[str] = None,
+    order: Optional[str] = None,
+    withExif: bool = False,
+    withPeople: bool = False,
+    withStacked: bool = False,
+) -> dict[str, Any]:
+    """List all assets with optional filters and pagination.
+
+    Args:
+        page: Page number. Defaults to 1.
+        size: Number of results per page. Defaults to 50.
+        type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
+        isFavorite: Filter by favorite status.
+        isMotion: Filter by motion photo.
+        isOffline: Filter by offline status.
+        isNotInAlbum: Filter assets not in any album.
+        takenAfter: Filter by taken date after. Use ISO 8601 format.
+        takenBefore: Filter by taken date before. Use ISO 8601 format.
+        originalFileName: Filter by original file name.
+        city: Filter by city name.
+        state: Filter by state/province name.
+        country: Filter by country name.
+        make: Filter by camera make.
+        model: Filter by camera model.
+        personIds: Comma-separated person IDs.
+        tagIds: Comma-separated tag IDs.
+        albumIds: Comma-separated album IDs.
+        libraryId: Library ID to filter by.
+        order: Sort order (asc, desc).
+        withExif: Include EXIF data.
+        withPeople: Include people data.
+        withStacked: Include stacked assets.
+    """
+    payload: dict[str, Any] = {"page": page, "size": size}
+    if type: payload["type"] = type
+    if isFavorite is not None: payload["isFavorite"] = isFavorite
+    if isMotion is not None: payload["isMotion"] = isMotion
+    if isOffline is not None: payload["isOffline"] = isOffline
+    if isNotInAlbum is not None: payload["isNotInAlbum"] = isNotInAlbum
+    if takenAfter: payload["takenAfter"] = takenAfter
+    if takenBefore: payload["takenBefore"] = takenBefore
+    if originalFileName: payload["originalFileName"] = originalFileName
+    if city: payload["city"] = city
+    if state: payload["state"] = state
+    if country: payload["country"] = country
+    if make: payload["make"] = make
+    if model: payload["model"] = model
+    if personIds: payload["personIds"] = [p.strip() for p in personIds.split(",") if p.strip()]
+    if tagIds: payload["tagIds"] = [t.strip() for t in tagIds.split(",") if t.strip()]
+    if albumIds: payload["albumIds"] = [a.strip() for a in albumIds.split(",") if a.strip()]
+    if libraryId: payload["libraryId"] = libraryId
+    if order: payload["order"] = order
+    if withExif: payload["withExif"] = True
+    if withPeople: payload["withPeople"] = True
+    if withStacked: payload["withStacked"] = True
+    return await get_client().search_metadata(payload, get_user_token())
+
+@mcp.tool()
+async def upload_asset(
+    base64_data: str,
+    deviceAssetId: str,
+    deviceId: str,
+    fileCreatedAt: str,
+    fileModifiedAt: str,
+    ctx: Context,
+    filename: str = "",
+    duration: Optional[int] = None,
+    isFavorite: Optional[bool] = None,
+    visibility: Optional[str] = None,
+) -> dict[str, Any]:
+    """Upload an asset from base64-encoded data.
+
+    Args:
+        base64_data: Base64-encoded file data (required).
+        deviceAssetId: Unique asset ID for the device (required).
+        deviceId: Device identifier (required).
+        fileCreatedAt: File creation timestamp in ISO 8601 format (required).
+        fileModifiedAt: File modification timestamp in ISO 8601 format (required).
+        filename: Original filename.
+        duration: Duration in seconds (for video assets).
+        isFavorite: Mark as favorite.
+        visibility: Asset visibility (public, private).
+    """
+    return await get_client().upload_asset(
+        base64_data, deviceAssetId, deviceId, fileCreatedAt, fileModifiedAt, get_user_token(),
+        filename=filename, duration=duration,
+        is_favorite=isFavorite, visibility=visibility,
     )
 
 # =============================================================================
@@ -1437,6 +1574,23 @@ async def add_assets_to_memory(
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool()
+async def remove_assets_from_memory(
+    id: str,
+    assetIds: str,
+    ctx: Context
+) -> dict[str, Any]:
+    """Remove assets from a memory.
+
+    Args:
+        id: The unique ID of the memory (required).
+        assetIds: Comma-separated asset IDs to remove (required).
+    """
+    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
+    payload = {"ids": asset_list}
+    data = await get_client().remove_assets_from_memory(id, payload, get_user_token())
+    return {"items": data} if isinstance(data, list) else data
+
+@mcp.tool()
 async def get_memory_statistics(ctx: Context) -> dict[str, Any]:
     """Get memory statistics."""
     return await get_client().get_memory_statistics(get_user_token())
@@ -1659,6 +1813,40 @@ async def delete_shared_link_by_id(
         id: The unique ID of the shared link to delete (required).
     """
     return await get_client().delete_shared_link_by_id(id, get_user_token())
+
+@mcp.tool()
+async def add_assets_to_shared_link(
+    id: str,
+    assetIds: str,
+    ctx: Context
+) -> dict[str, Any]:
+    """Add assets to a shared link.
+
+    Args:
+        id: The unique ID of the shared link (required).
+        assetIds: Comma-separated asset IDs to add (required).
+    """
+    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
+    payload = {"assetIds": asset_list}
+    data = await get_client().add_assets_to_shared_link(id, payload, get_user_token())
+    return {"items": data} if isinstance(data, list) else data
+
+@mcp.tool()
+async def remove_assets_from_shared_link(
+    id: str,
+    assetIds: str,
+    ctx: Context
+) -> dict[str, Any]:
+    """Remove assets from a shared link.
+
+    Args:
+        id: The unique ID of the shared link (required).
+        assetIds: Comma-separated asset IDs to remove (required).
+    """
+    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
+    payload = {"assetIds": asset_list}
+    data = await get_client().remove_assets_from_shared_link(id, payload, get_user_token())
+    return {"items": data} if isinstance(data, list) else data
 
 # =============================================================================
 # Activity Tools
@@ -1984,6 +2172,115 @@ async def search_cities(ctx: Context) -> dict[str, Any]:
     """Get assets grouped by city."""
     result = await get_client().search_cities(get_user_token())
     return {"results": result} if isinstance(result, list) else result
+
+@mcp.tool()
+async def search_random(
+    ctx: Context,
+    size: int = 50,
+    type: Optional[str] = None,
+    isFavorite: Optional[bool] = None,
+    isMotion: Optional[bool] = None,
+    isNotInAlbum: Optional[bool] = None,
+    personIds: str = "",
+    tagIds: str = "",
+    albumIds: str = "",
+    libraryId: Optional[str] = None,
+    city: Optional[str] = None,
+    state: Optional[str] = None,
+    country: Optional[str] = None,
+    make: Optional[str] = None,
+    model: Optional[str] = None,
+) -> dict[str, Any]:
+    """Get a random selection of assets.
+
+    Args:
+        size: Number of results to return. Defaults to 50.
+        type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
+        isFavorite: Filter by favorite status.
+        isMotion: Filter by motion photo.
+        isNotInAlbum: Filter assets not in any album.
+        personIds: Comma-separated person IDs.
+        tagIds: Comma-separated tag IDs.
+        albumIds: Comma-separated album IDs.
+        libraryId: Library ID.
+        city: Filter by city name.
+        state: Filter by state/province name.
+        country: Filter by country name.
+        make: Filter by camera make.
+        model: Filter by camera model.
+    """
+    payload: dict[str, Any] = {"size": size}
+    if type: payload["type"] = type
+    if isFavorite is not None: payload["isFavorite"] = isFavorite
+    if isMotion is not None: payload["isMotion"] = isMotion
+    if isNotInAlbum is not None: payload["isNotInAlbum"] = isNotInAlbum
+    if personIds: payload["personIds"] = [p.strip() for p in personIds.split(",") if p.strip()]
+    if tagIds: payload["tagIds"] = [t.strip() for t in tagIds.split(",") if t.strip()]
+    if albumIds: payload["albumIds"] = [a.strip() for a in albumIds.split(",") if a.strip()]
+    if libraryId: payload["libraryId"] = libraryId
+    if city: payload["city"] = city
+    if state: payload["state"] = state
+    if country: payload["country"] = country
+    if make: payload["make"] = make
+    if model: payload["model"] = model
+    data = await get_client().search_random(payload, get_user_token())
+    return {"results": data} if isinstance(data, list) else data
+
+@mcp.tool()
+async def search_person(
+    ctx: Context,
+    name: str,
+    withHidden: bool = False,
+) -> dict[str, Any]:
+    """Search for people by name.
+
+    Args:
+        name: Person name to search for (required).
+        withHidden: Include hidden people.
+    """
+    params = {"name": name, "withHidden": withHidden}
+    result = await get_client().search_person(params, get_user_token())
+    return {"results": result} if isinstance(result, list) else result
+
+@mcp.tool()
+async def search_places(
+    ctx: Context,
+    name: str,
+) -> dict[str, Any]:
+    """Search for places by name.
+
+    Args:
+        name: Place name to search for (required).
+    """
+    params = {"name": name}
+    result = await get_client().search_places(params, get_user_token())
+    return {"results": result} if isinstance(result, list) else result
+
+@mcp.tool()
+async def get_people_assets(
+    ctx: Context,
+    personIds: str,
+    page: int = 1,
+    size: int = 50,
+    type: Optional[str] = None,
+    isFavorite: Optional[bool] = None,
+) -> dict[str, Any]:
+    """List assets for specific people.
+
+    Args:
+        personIds: Comma-separated person IDs (required).
+        page: Page number. Defaults to 1.
+        size: Number of results per page. Defaults to 50.
+        type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
+        isFavorite: Filter by favorite status.
+    """
+    payload: dict[str, Any] = {"page": page, "size": size}
+    pid_list = [p.strip() for p in personIds.split(",") if p.strip()]
+    if pid_list:
+        payload["personIds"] = pid_list
+    if type: payload["type"] = type
+    if isFavorite is not None: payload["isFavorite"] = isFavorite
+    return await get_client().search_metadata(payload, get_user_token())
 
 # =============================================================================
 # Timeline & Map Tools

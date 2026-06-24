@@ -578,11 +578,19 @@ async def main():
             {"id": gid, "description": "Updated"}
         )
         await run_test(
-            session, "C4e delete_shared_link_by_id", "delete_shared_link_by_id",
+            session, "C4e add_assets_to_shared_link", "add_assets_to_shared_link",
+            {"id": gid, "assetIds": ASSET_IDS[0] if ASSET_IDS else FAKE_UUID}
+        )
+        await run_test(
+            session, "C5e remove_assets_from_shared_link", "remove_assets_from_shared_link",
+            {"id": gid, "assetIds": ASSET_IDS[0] if ASSET_IDS else FAKE_UUID}
+        )
+        await run_test(
+            session, "C6e delete_shared_link_by_id", "delete_shared_link_by_id",
             {"id": gid}
         )
         await run_verify_delete(
-            session, "C5e verify_delete_shared_link", "get_shared_link_by_id",
+            session, "C7e verify_delete_shared_link", "get_shared_link_by_id",
             {"id": gid}
         )
 
@@ -752,6 +760,10 @@ async def main():
             session, "I1 add_assets_to_memory", "add_assets_to_memory",
             {"id": fresh_mem_id, "assetIds": ASSET_IDS[0]}
         )
+        await run_test(
+            session, "I2 remove_assets_from_memory", "remove_assets_from_memory",
+            {"id": fresh_mem_id, "assetIds": ASSET_IDS[0]}
+        )
 
         # Phase 10: Stack Relationship Tools
         log("\n=== Phase 10: Stack Relationship Tools ===")
@@ -780,6 +792,14 @@ async def main():
         )
         await run_test(
             session, "K3 get_asset_by_id", "get_asset_by_id",
+            {"id": _aid}
+        )
+        await run_test(
+            session, "K20 get_asset_exif", "get_asset_exif",
+            {"id": _aid}
+        )
+        await run_test(
+            session, "K21 get_asset_video_url", "get_asset_video_url",
             {"id": _aid}
         )
         await run_test(
@@ -821,6 +841,21 @@ async def main():
         await run_test(
             session, "K13 copy_asset", "copy_asset",
             {"sourceId": _aid, "targetId": ASSET_IDS[1] if len(ASSET_IDS) > 1 else _aid}
+        )
+        await run_test(
+            session, "K22 get_all_assets", "get_all_assets",
+            {"page": 1, "size": 5}
+        )
+        # Upload a 1x1 pixel transparent PNG from base64
+        _tiny_png_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        await run_test(
+            session, "K23 upload_asset", "upload_asset",
+            {"base64_data": _tiny_png_b64,
+             "deviceAssetId": "web-test_upload-1234567890",
+             "deviceId": "WEB",
+             "fileCreatedAt": "2026-06-22T15:00:00+00:00",
+             "fileModifiedAt": "2026-06-22T15:00:00+00:00",
+             "filename": "test_upload.png"}
         )
 
         # Phase 12: Face Tools
@@ -907,6 +942,23 @@ async def main():
             session, "R2 search_smart", "search_smart",
             {"query": "test"}
         )
+        await run_test(
+            session, "R3 search_random", "search_random",
+            {"size": 5}
+        )
+        await run_test(
+            session, "R4 search_person", "search_person",
+            {"name": "Admin", "withHidden": True}
+        )
+        await run_test(
+            session, "R5 search_places", "search_places",
+            {"name": "New York"}
+        )
+        if rel_person_id and rel_person_id != ASSET_IDS[0]:
+            await run_test(
+                session, "R6 get_people_assets", "get_people_assets",
+                {"personIds": rel_person_id, "page": 1, "size": 10}
+            )
 
         # Report Summary
         passed = sum(1 for r in results if r["status"] == "PASSED")

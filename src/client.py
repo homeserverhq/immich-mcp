@@ -1,3 +1,4 @@
+import base64
 import os
 import re
 import datetime as dt
@@ -210,6 +211,47 @@ class ImmichClient:
 
     async def get_asset_video_playback(self, asset_id: str, api_key: Optional[str] = None) -> Any:
         return await self.get(f"/assets/{asset_id}/video/playback", api_key)
+
+    async def get_asset_video_url(self, asset_id: str, api_key: Optional[str] = None) -> str:
+        return f"{self.public_url}/assets/{asset_id}/video/playback"
+
+    async def upload_asset(
+        self,
+        base64_data: str,
+        device_asset_id: str,
+        device_id: str,
+        file_created_at: str,
+        file_modified_at: str,
+        api_key: Optional[str] = None,
+        filename: str = "",
+        duration: Optional[int] = None,
+        is_favorite: Optional[bool] = None,
+        visibility: Optional[str] = None,
+    ) -> Any:
+        file_bytes = base64.b64decode(base64_data)
+        headers = {}
+        if api_key:
+            headers["x-api-key"] = api_key
+        url = f"{self.base_url}/api/assets"
+        files = {"assetData": (filename or "upload", file_bytes)}
+        data: dict[str, Any] = {
+            "deviceAssetId": device_asset_id,
+            "deviceId": device_id,
+            "fileCreatedAt": file_created_at,
+            "fileModifiedAt": file_modified_at,
+        }
+        if filename:
+            data["filename"] = filename
+        if duration is not None:
+            data["duration"] = duration
+        if is_favorite is not None:
+            data["isFavorite"] = str(is_favorite).lower()
+        if visibility:
+            data["visibility"] = visibility
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(url, headers=headers, files=files, data=data)
+            response.raise_for_status()
+            return response.json()
 
     # ==========================================================================
     # Album Domain
