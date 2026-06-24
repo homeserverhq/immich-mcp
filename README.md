@@ -27,9 +27,10 @@ with full CRUD, search, timeline, map, and relationship management.
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `IMMICH_BASE_URL` | Yes | Docker-internal URL of the Immich API (e.g. `http://immich-app:2283/api`) |
+| `IMMICH_BASE_URL` | Yes | Docker-internal URL of the Immich server (e.g. `http://immich-app:2283`). The `/api` prefix is appended automatically. |
 | `MCP_SERVER_PORT` | Yes | Port number the MCP server listens on |
 | `ALLOW_ALL_AGGREGATE` | No | When `true`, aggregate listing tools honor the `include_all_fields` parameter. When `false` (default), the parameter is silently forced to `False` for aggregate list operations. |
+| `IMMICH_PUBLIC_URL` | No | Public-facing base URL of the Immich server (e.g. `https://immich.example.com`). Used to construct user-accessible URLs for thumbnails, originals, and profile images. Defaults to `IMMICH_BASE_URL` if not set. |
 
 ## 📦 Installation & Local Development
 
@@ -40,7 +41,7 @@ with full CRUD, search, timeline, map, and relationship management.
     ```
 3. Run the server:
     ```bash
-    export IMMICH_BASE_URL=http://localhost:2283/api
+    export IMMICH_BASE_URL=http://localhost:2283
     export MCP_SERVER_PORT=80
     python -m src.main
     ```
@@ -52,7 +53,8 @@ Build and run the server using Docker:
 ```bash
 docker build -t immich-mcp:latest .
 docker run -d --name immich-mcp --network dock-ext \
-    -e IMMICH_BASE_URL="http://immich-app:2283/api" \
+    -e IMMICH_BASE_URL="http://immich-app:2283" \
+    -e IMMICH_PUBLIC_URL="https://immich.example.com" \
     -e MCP_SERVER_PORT=80 \
     immich-mcp:latest
 

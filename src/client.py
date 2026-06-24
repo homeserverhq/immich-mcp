@@ -62,6 +62,8 @@ class ImmichClient:
                 "Immich URL required. Set IMMICH_BASE_URL env var "
                 "or pass base_url."
             )
+        public_url = os.getenv("IMMICH_PUBLIC_URL", "").rstrip("/")
+        self.public_url = public_url or self.base_url
 
     def _get_headers(self, api_key: Optional[str] = None) -> dict[str, str]:
         headers = {
@@ -78,7 +80,7 @@ class ImmichClient:
         api_key: Optional[str] = None,
         **kwargs: Any,
     ) -> Any:
-        url = f"{self.base_url}{path}"
+        url = f"{self.base_url}/api{path}"
         headers = self._get_headers(api_key)
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.request(method, url, headers=headers, **kwargs)
@@ -171,10 +173,10 @@ class ImmichClient:
         return await self.get(f"/assets/{asset_id}/edits", api_key)
 
     async def get_asset_thumbnail_url(self, asset_id: str, api_key: Optional[str] = None) -> str:
-        return f"{self.base_url}/assets/{asset_id}/thumbnail"
+        return f"{self.public_url}/assets/{asset_id}/thumbnail"
 
     async def get_asset_original_url(self, asset_id: str, api_key: Optional[str] = None) -> str:
-        return f"{self.base_url}/assets/{asset_id}/original"
+        return f"{self.public_url}/assets/{asset_id}/original"
 
     async def update_asset(self, asset_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.put(f"/assets/{asset_id}", api_key, json=payload)
@@ -358,7 +360,7 @@ class ImmichClient:
         return await self.get(f"/people/{person_id}/statistics", api_key)
 
     async def get_person_thumbnail_url(self, person_id: str, api_key: Optional[str] = None) -> str:
-        return f"{self.base_url}/people/{person_id}/thumbnail"
+        return f"{self.public_url}/people/{person_id}/thumbnail"
 
     async def get_faces_by_asset(self, asset_id: str, api_key: Optional[str] = None) -> Any:
         return await self.get(f"/faces?id={asset_id}", api_key)
@@ -726,7 +728,7 @@ class ImmichClient:
         return await self.delete("/users/me/onboarding", api_key)
 
     async def get_user_profile_image_url(self, user_id: str, api_key: Optional[str] = None) -> str:
-        return f"{self.base_url}/users/{user_id}/profile-image"
+        return f"{self.public_url}/users/{user_id}/profile-image"
 
     async def delete_profile_image(self, api_key: Optional[str] = None) -> Any:
         return await self.delete("/users/profile-image", api_key)
