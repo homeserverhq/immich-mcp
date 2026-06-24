@@ -52,7 +52,7 @@ Build and run the server using Docker:
 
 ```bash
 docker build -t immich-mcp:latest .
-docker run -d --name immich-mcp --network dock-ext \
+docker run -d --name immich-mcp \
     -e IMMICH_BASE_URL="http://immich-app:2283" \
     -e IMMICH_PUBLIC_URL="https://immich.example.com" \
     -e MCP_SERVER_PORT=80 \
