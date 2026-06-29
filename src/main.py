@@ -325,58 +325,58 @@ class UpdateMyPreferencesParam(BaseModel):
 # Server Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_server_ping(ctx: Context) -> dict[str, Any]:
     """Check if the Immich server is reachable."""
     return await get_client().get_server_ping(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_server_version(ctx: Context) -> dict[str, Any]:
     """Get the Immich server version."""
     return await get_client().get_server_version(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_server_about(ctx: Context) -> dict[str, Any]:
     """Get general server information."""
     return await get_client().get_server_about(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_server_config(ctx: Context) -> dict[str, Any]:
     """Get the server configuration settings."""
     return await get_client().get_server_config(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_server_features(ctx: Context) -> dict[str, Any]:
     """Get the server feature flags."""
     return await get_client().get_server_features(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_server_statistics(ctx: Context) -> dict[str, Any]:
     """Get server usage statistics."""
     return await get_client().get_server_statistics(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_server_storage(ctx: Context) -> dict[str, Any]:
     """Get server storage information."""
     return await get_client().get_server_storage(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_server_media_types(ctx: Context) -> dict[str, Any]:
     """Get supported media types."""
     return await get_client().get_server_media_types(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_server_version_check(ctx: Context) -> dict[str, Any]:
     """Get version check status."""
     return await get_client().get_server_version_check(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_server_version_history(ctx: Context) -> dict[str, Any]:
     """Get version history."""
     result = await get_client().get_server_version_history(get_user_token())
     return {"results": result} if isinstance(result, list) else result
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_server_apk_links(ctx: Context) -> dict[str, Any]:
     """Get APK download links."""
     return     await get_client().get_server_apk_links(get_user_token())
@@ -385,7 +385,7 @@ async def get_server_apk_links(ctx: Context) -> dict[str, Any]:
 # Asset Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_asset_by_id(
 id: str,
 ctx: Context,
@@ -401,12 +401,12 @@ include_all_fields: bool = False,
         id, get_user_token(), include_all_fields=include_all_fields
     )
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_asset_statistics(ctx: Context) -> dict[str, Any]:
     """Get asset statistics (total count, image/video counts)."""
     return await get_client().get_asset_statistics(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_asset_exif(
     id: str,
     ctx: Context
@@ -420,7 +420,7 @@ async def get_asset_exif(
     exif = data.get("exifInfo", {})
     return {"exifInfo": exif}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_asset_ocr(
     id: str,
     ctx: Context
@@ -433,7 +433,7 @@ async def get_asset_ocr(
     data = await get_client().get_asset_ocr(id, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_asset_metadata(
     id: str,
     ctx: Context
@@ -446,7 +446,7 @@ async def get_asset_metadata(
     data = await get_client().get_asset_metadata(id, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_asset_metadata_by_key(
     id: str,
     key: str,
@@ -460,7 +460,7 @@ async def get_asset_metadata_by_key(
     """
     return await get_client().get_asset_metadata_by_key(id, key, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_asset_edits(
     id: str,
     ctx: Context
@@ -472,7 +472,7 @@ async def get_asset_edits(
     """
     return await get_client().get_asset_edits(id, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_asset_thumbnail_url(
     id: str,
     ctx: Context
@@ -485,7 +485,7 @@ async def get_asset_thumbnail_url(
     url = await get_client().get_asset_thumbnail_url(id, get_user_token())
     return {"url": url}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_asset_original_url(
     id: str,
     ctx: Context
@@ -498,7 +498,7 @@ async def get_asset_original_url(
     url = await get_client().get_asset_original_url(id, get_user_token())
     return {"url": url}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_asset_video_url(
     id: str,
     ctx: Context
@@ -511,7 +511,7 @@ async def get_asset_video_url(
     url = await get_client().get_asset_video_url(id, get_user_token())
     return {"url": url}
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def update_asset(
 id: str,
 ctx: Context,
@@ -547,7 +547,7 @@ livePhotoVideoId: Optional[str] = None,
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def update_asset_edits(
     id: str,
     ctx: Context,
@@ -563,7 +563,7 @@ async def update_asset_edits(
     payload = {"edits": json.loads(edits) if edits else []}
     return await get_client().update_asset_edits(id, payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def update_asset_metadata(
     id: str,
     ctx: Context,
@@ -580,7 +580,7 @@ async def update_asset_metadata(
     result = await get_client().update_asset_metadata(id, {"items": items}, get_user_token())
     return {"results": result} if isinstance(result, list) else result
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def delete_assets(
 ids: str,
 ctx: Context,
@@ -598,7 +598,7 @@ force: bool = False,
         payload["force"] = True
     return await get_client().delete_assets(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def bulk_update_assets(
 ids: str,
 ctx: Context,
@@ -638,7 +638,7 @@ timeZone: Optional[str] = None,
         params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def copy_asset(
 sourceId: str,
 targetId: str,
@@ -669,7 +669,7 @@ stack: bool = False,
         params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_all_assets(
     ctx: Context,
     page: int = 1,
@@ -752,7 +752,7 @@ async def get_all_assets(
         payload, get_user_token(), include_all_fields=include_all_fields
     )
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_assets_by_tag(
     tagId: str,
     ctx: Context,
@@ -774,7 +774,7 @@ async def get_assets_by_tag(
         include_all_fields=include_all_fields,
     )
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_album_assets(
     albumId: str,
     ctx: Context,
@@ -796,7 +796,7 @@ async def get_album_assets(
         include_all_fields=include_all_fields,
     )
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_memory_assets(
     memoryId: str,
     ctx: Context,
@@ -814,7 +814,7 @@ async def get_memory_assets(
     )
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"write", "basic", "immich"})
 async def upload_asset(
     base64_data: str,
     deviceAssetId: str,
@@ -850,7 +850,7 @@ async def upload_asset(
 # Album Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_all_albums(
 ctx: Context,
 include_all_fields: bool = False,
@@ -868,7 +868,7 @@ include_all_fields: bool = False,
     )
     return {"items": json_to_toon(data)}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_album_by_id(
 id: str,
 ctx: Context,
@@ -885,7 +885,7 @@ include_all_fields: bool = False,
         id, get_user_token(), include_all_fields=include_all_fields
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "basic", "immich"})
 async def create_album(
 albumName: str,
 ctx: Context,
@@ -911,7 +911,7 @@ assetIds: str = "",
         payload["assetIds"] = asset_list
     return await get_client().create_album(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def update_album(
 id: str,
 ctx: Context,
@@ -940,7 +940,7 @@ order: Optional[str] = None,
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def delete_album_by_id(
     id: str,
     ctx: Context
@@ -952,7 +952,7 @@ async def delete_album_by_id(
     """
     return await get_client().delete_album_by_id(id, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def add_assets_to_album(
     id: str,
     assetIds: str,
@@ -969,7 +969,7 @@ async def add_assets_to_album(
     data = await get_client().add_assets_to_album(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def remove_assets_from_album(
     id: str,
     assetIds: str,
@@ -986,7 +986,7 @@ async def remove_assets_from_album(
     data = await get_client().remove_assets_from_album(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def share_album_with_users(
     id: str,
     albumUsers: str,
@@ -1002,7 +1002,7 @@ async def share_album_with_users(
     payload = {"albumUsers": users_list}
     return await get_client().add_users_to_album(id, payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def remove_user_from_album(
     id: str,
     userId: str,
@@ -1016,12 +1016,12 @@ async def remove_user_from_album(
     """
     return await get_client().remove_user_from_album(id, userId, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_album_statistics(ctx: Context) -> dict[str, Any]:
     """Get album statistics."""
     return await get_client().get_album_statistics(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_album_map_markers(
     id: str,
     ctx: Context
@@ -1038,7 +1038,7 @@ async def get_album_map_markers(
 # Tag Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_all_tags(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1055,7 +1055,7 @@ include_all_fields: bool = False,
     )
     return {"items": json_to_toon(data)}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_tag_by_id(
 id: str,
 ctx: Context,
@@ -1072,7 +1072,7 @@ include_all_fields: bool = False,
         id, get_user_token(), include_all_fields=include_all_fields
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def create_tag(
 name: str,
 ctx: Context,
@@ -1093,7 +1093,7 @@ parentId: str = "",
         payload["parentId"] = parentId
     return await get_client().create_tag(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def update_tag(
 id: str,
 ctx: Context,
@@ -1110,7 +1110,7 @@ color: Optional[str] = None,
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def delete_tag_by_id(
     id: str,
     ctx: Context
@@ -1122,7 +1122,7 @@ async def delete_tag_by_id(
     """
     return await get_client().delete_tag_by_id(id, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def upsert_tags(
     tags: str,
     ctx: Context
@@ -1137,7 +1137,7 @@ async def upsert_tags(
     data = await get_client().upsert_tags(payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def tag_assets(
     assetIds: str,
     tagIds: str,
@@ -1154,7 +1154,7 @@ async def tag_assets(
     payload = {"assetIds": asset_list, "tagIds": tag_list}
     return await get_client().tag_assets(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def tag_assets_by_tag(
     id: str,
     assetIds: str,
@@ -1171,7 +1171,7 @@ async def tag_assets_by_tag(
     data = await get_client().tag_assets_by_tag(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def untag_assets(
     id: str,
     assetIds: str,
@@ -1192,7 +1192,7 @@ async def untag_assets(
 # People / Faces Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_all_people(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1209,7 +1209,7 @@ include_all_fields: bool = False,
     )
     return {"items": json_to_toon(data)}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_person_by_id(
 id: str,
 ctx: Context,
@@ -1226,7 +1226,7 @@ include_all_fields: bool = False,
         id, get_user_token(), include_all_fields=include_all_fields
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def create_person(
 ctx: Context,
 name: str = "",
@@ -1252,7 +1252,7 @@ isHidden: bool = False,
         params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def update_person(
 id: str,
 ctx: Context,
@@ -1283,7 +1283,7 @@ featureFaceAssetId: Optional[str] = None,
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def delete_person_by_id(
     id: str,
     ctx: Context
@@ -1295,7 +1295,7 @@ async def delete_person_by_id(
     """
     return await get_client().delete_person_by_id(id, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def merge_people(
     id: str,
     mergeIds: str,
@@ -1312,7 +1312,7 @@ async def merge_people(
     data = await get_client().merge_people(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_person_statistics(
     id: str,
     ctx: Context
@@ -1324,7 +1324,7 @@ async def get_person_statistics(
     """
     return await get_client().get_person_statistics(id, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_person_thumbnail_url(
     id: str,
     ctx: Context
@@ -1337,7 +1337,7 @@ async def get_person_thumbnail_url(
     url = await get_client().get_person_thumbnail_url(id, get_user_token())
     return {"url": url}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_faces_by_asset(
     id: str,
     ctx: Context
@@ -1350,7 +1350,7 @@ async def get_faces_by_asset(
     data = await get_client().get_faces_by_asset(id, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def reassign_face(
     assetId: str,
     personId: str,
@@ -1366,7 +1366,7 @@ async def reassign_face(
     data = await get_client().reassign_faces(personId, payload, get_user_token())
     return {"results": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def delete_face(
     id: str,
     ctx: Context,
@@ -1385,7 +1385,7 @@ async def delete_face(
 # Library Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_all_libraries(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1402,7 +1402,7 @@ include_all_fields: bool = False,
     )
     return {"items": json_to_toon(data)}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_library_by_id(
 id: str,
 ctx: Context,
@@ -1419,7 +1419,7 @@ include_all_fields: bool = False,
         id, get_user_token(), include_all_fields=include_all_fields
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def create_library(
 ownerId: str,
 ctx: Context,
@@ -1445,7 +1445,7 @@ exclusionPatterns: str = "",
         payload["exclusionPatterns"] = exclude_list
     return await get_client().create_library(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def update_library(
 id: str,
 ctx: Context,
@@ -1469,7 +1469,7 @@ exclusionPatterns: Optional[str] = None,
         payload["exclusionPatterns"] = [p.strip() for p in exclusionPatterns.split(",") if p.strip()]
     return await get_client().update_library(id, payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def delete_library_by_id(
     id: str,
     ctx: Context
@@ -1481,7 +1481,7 @@ async def delete_library_by_id(
     """
     return await get_client().delete_library_by_id(id, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def scan_library(
     id: str,
     ctx: Context
@@ -1493,7 +1493,7 @@ async def scan_library(
     """
     return await get_client().scan_library(id, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_library_statistics(
     id: str,
     ctx: Context
@@ -1509,7 +1509,7 @@ async def get_library_statistics(
 # Memory Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_all_memories(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1526,7 +1526,7 @@ include_all_fields: bool = False,
     )
     return {"items": json_to_toon(data)}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_memory_by_id(
 id: str,
 ctx: Context,
@@ -1543,7 +1543,7 @@ include_all_fields: bool = False,
         id, get_user_token(), include_all_fields=include_all_fields
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def create_memory(
 type: str,
 memoryAt: str,
@@ -1590,7 +1590,7 @@ seenAt: str = "",
         payload["seenAt"] = _normalize_datetime(seenAt)
     return await get_client().create_memory(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def update_memory(
 id: str,
 ctx: Context,
@@ -1611,7 +1611,7 @@ seenAt: Optional[str] = None,
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def delete_memory_by_id(
     id: str,
     ctx: Context
@@ -1623,7 +1623,7 @@ async def delete_memory_by_id(
     """
     return await get_client().delete_memory_by_id(id, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def add_assets_to_memory(
     id: str,
     assetIds: str,
@@ -1640,7 +1640,7 @@ async def add_assets_to_memory(
     data = await get_client().add_assets_to_memory(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def remove_assets_from_memory(
     id: str,
     assetIds: str,
@@ -1657,7 +1657,7 @@ async def remove_assets_from_memory(
     data = await get_client().remove_assets_from_memory(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_memory_statistics(ctx: Context) -> dict[str, Any]:
     """Get memory statistics."""
     return await get_client().get_memory_statistics(get_user_token())
@@ -1666,7 +1666,7 @@ async def get_memory_statistics(ctx: Context) -> dict[str, Any]:
 # Stack Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_all_stacks(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1683,7 +1683,7 @@ include_all_fields: bool = False,
     )
     return {"items": json_to_toon(data)}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_stack_by_id(
 id: str,
 ctx: Context,
@@ -1700,7 +1700,7 @@ include_all_fields: bool = False,
         id, get_user_token(), include_all_fields=include_all_fields
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def create_stack(
     assetIds: str,
     ctx: Context
@@ -1714,7 +1714,7 @@ async def create_stack(
     payload = {"assetIds": asset_list}
     return await get_client().create_stack(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def update_stack(
 id: str,
 ctx: Context,
@@ -1731,7 +1731,7 @@ primaryAssetId: Optional[str] = None,
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def delete_stack_by_id(
     id: str,
     ctx: Context
@@ -1743,7 +1743,7 @@ async def delete_stack_by_id(
     """
     return await get_client().delete_stack_by_id(id, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def remove_asset_from_stack(
     id: str,
     assetId: str,
@@ -1761,7 +1761,7 @@ async def remove_asset_from_stack(
 # Shared Link Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_all_shared_links(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1778,7 +1778,7 @@ include_all_fields: bool = False,
     )
     return {"items": json_to_toon(data)}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_shared_link_by_id(
 id: str,
 ctx: Context,
@@ -1795,7 +1795,7 @@ include_all_fields: bool = False,
         id, get_user_token(), include_all_fields=include_all_fields
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def create_shared_link(
 type: str,
 ctx: Context,
@@ -1836,7 +1836,7 @@ slug: str = "",
         payload["albumId"] = albumId
     return await get_client().create_shared_link(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def update_shared_link(
 id: str,
 ctx: Context,
@@ -1869,7 +1869,7 @@ slug: Optional[str] = None,
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def delete_shared_link_by_id(
     id: str,
     ctx: Context
@@ -1881,7 +1881,7 @@ async def delete_shared_link_by_id(
     """
     return await get_client().delete_shared_link_by_id(id, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def add_assets_to_shared_link(
     id: str,
     assetIds: str,
@@ -1898,7 +1898,7 @@ async def add_assets_to_shared_link(
     data = await get_client().add_assets_to_shared_link(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def remove_assets_from_shared_link(
     id: str,
     assetIds: str,
@@ -1919,7 +1919,7 @@ async def remove_assets_from_shared_link(
 # Activity Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_all_activities(
 ctx: Context,
 albumId: str = "",
@@ -1954,7 +1954,7 @@ include_all_fields: bool = False,
     )
     return {"items": json_to_toon(data)} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_activity_statistics(
 albumId: str,
 ctx: Context,
@@ -1971,7 +1971,7 @@ assetId: str = "",
         params["assetId"] = assetId
     return await get_client().get_activity_statistics(get_user_token(), params=params)
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def create_activity(
 albumId: str,
 type: str,
@@ -1994,7 +1994,7 @@ comment: str = "",
         payload["comment"] = comment
     return await get_client().create_activity(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def delete_activity_by_id(
     id: str,
     ctx: Context
@@ -2010,7 +2010,7 @@ async def delete_activity_by_id(
 # Partner Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_all_partners(
 ctx: Context,
 direction: str = "",
@@ -2033,7 +2033,7 @@ include_all_fields: bool = False,
     )
     return {"items": json_to_toon(data)}
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def create_partner(
     sharedWithId: str,
     ctx: Context
@@ -2048,7 +2048,7 @@ async def create_partner(
         params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def update_partner(
     id: str,
     inTimeline: bool,
@@ -2065,7 +2065,7 @@ async def update_partner(
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "advanced", "immich"})
 async def delete_partner_by_id(
     id: str,
     ctx: Context
@@ -2081,7 +2081,7 @@ async def delete_partner_by_id(
 # Search Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def search_metadata(
 ctx: Context,
 page: int = 1,
@@ -2162,7 +2162,7 @@ withStacked: bool = False,
     if withStacked: payload["withStacked"] = True
     return await get_client().search_metadata(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def search_smart(
 query: str,
 ctx: Context,
@@ -2212,7 +2212,7 @@ libraryId: Optional[str] = None,
     if libraryId: payload["libraryId"] = libraryId
     return await get_client().search_smart(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def search_suggestions(
     type: str,
     query: str,
@@ -2228,19 +2228,19 @@ async def search_suggestions(
     result = await get_client().search_suggestions(params, get_user_token())
     return {"results": result} if isinstance(result, list) else result
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def search_explore(ctx: Context) -> dict[str, Any]:
     """Get explore data grouped by city."""
     result = await get_client().search_explore(get_user_token())
     return {"results": result} if isinstance(result, list) else result
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def search_cities(ctx: Context) -> dict[str, Any]:
     """Get assets grouped by city."""
     result = await get_client().search_cities(get_user_token())
     return {"results": result} if isinstance(result, list) else result
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def search_random(
     ctx: Context,
     size: int = 100,
@@ -2293,7 +2293,7 @@ async def search_random(
     data = await get_client().search_random(payload, get_user_token())
     return {"results": data} if isinstance(data, list) else data
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def search_person(
     ctx: Context,
     name: str,
@@ -2309,7 +2309,7 @@ async def search_person(
     result = await get_client().search_person(params, get_user_token())
     return {"results": result} if isinstance(result, list) else result
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def search_places(
     ctx: Context,
     name: str,
@@ -2323,7 +2323,7 @@ async def search_places(
     result = await get_client().search_places(params, get_user_token())
     return {"results": result} if isinstance(result, list) else result
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_people_assets(
     ctx: Context,
     personIds: str,
@@ -2358,7 +2358,7 @@ async def get_people_assets(
 # Timeline & Map Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_time_buckets(
 size: str,
 ctx: Context,
@@ -2381,7 +2381,7 @@ userId: str = "",
     result = await get_client().get_time_buckets(params, get_user_token())
     return {"results": result} if isinstance(result, list) else result
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_time_bucket(
 size: str,
 timeBucket: str,
@@ -2406,7 +2406,7 @@ userId: str = "",
     data = await get_client().get_time_bucket(params, get_user_token())
     return {"items": json_to_toon(data)}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_map_markers(
 ctx: Context,
 fileCreatedAfter: str = "",
@@ -2433,7 +2433,7 @@ withPartners: bool = False,
     result = await get_client().get_map_markers(params, get_user_token())
     return {"results": result} if isinstance(result, list) else result
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def reverse_geocode(
     lat: float,
     lon: float,
@@ -2453,7 +2453,7 @@ async def reverse_geocode(
 # Duplicate Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_all_duplicates(
 ctx: Context,
 include_all_fields: bool = False,
@@ -2470,7 +2470,7 @@ include_all_fields: bool = False,
     )
     return {"items": json_to_toon(data)}
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def dismiss_duplicate_group(
     id: str,
     ctx: Context
@@ -2486,17 +2486,17 @@ async def dismiss_duplicate_group(
 # Trash Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def empty_trash(ctx: Context) -> dict[str, Any]:
     """Permanently empty the trash."""
     return await get_client().empty_trash(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def restore_trash(ctx: Context) -> dict[str, Any]:
     """Restore all trashed assets."""
     return await get_client().restore_trash(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def restore_trash_assets(
     ids: str,
     ctx: Context
@@ -2514,17 +2514,17 @@ async def restore_trash_assets(
 # System Config Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_system_config(ctx: Context) -> dict[str, Any]:
     """Get the full system configuration."""
     return await get_client().get_system_config(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_system_config_defaults(ctx: Context) -> dict[str, Any]:
     """Get system configuration defaults."""
     return await get_client().get_system_config_defaults(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "advanced", "immich"})
 async def get_storage_template_options(ctx: Context) -> dict[str, Any]:
     """Get available storage template options."""
     return await get_client().get_storage_template_options(get_user_token())
@@ -2533,7 +2533,7 @@ async def get_storage_template_options(ctx: Context) -> dict[str, Any]:
 # User & Account Tools
 # =============================================================================
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_all_users(
 ctx: Context,
 include_all_fields: bool = False,
@@ -2550,7 +2550,7 @@ include_all_fields: bool = False,
     )
     return {"items": json_to_toon(data)}
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_user_by_id(
 id: str,
 ctx: Context,
@@ -2567,7 +2567,7 @@ include_all_fields: bool = False,
         id, get_user_token(), include_all_fields=include_all_fields
     )
 
-@mcp.tool()
+@mcp.tool(tags={"read", "basic", "immich"})
 async def get_my_user_info(
 ctx: Context,
 include_all_fields: bool = False,
@@ -2582,7 +2582,7 @@ include_all_fields: bool = False,
         get_user_token(), include_all_fields=include_all_fields
     )
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def update_my_user(
 ctx: Context,
 email: Optional[str] = None,
@@ -2605,12 +2605,12 @@ avatarColor: Optional[str] = None,
         params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
     )
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_my_preferences(ctx: Context) -> dict[str, Any]:
     """Get the current user's preferences."""
     return await get_client().get_my_preferences(get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def update_my_preferences(
     preferences: str,
     ctx: Context
@@ -2627,7 +2627,7 @@ async def update_my_preferences(
         return {"error": "Invalid JSON preferences"}
     return await get_client().update_my_preferences(payload, get_user_token())
 
-@mcp.tool()
+@mcp.tool(tags={"read", "primary", "immich"})
 async def get_user_profile_image_url(
     id: str,
     ctx: Context
@@ -2640,7 +2640,7 @@ async def get_user_profile_image_url(
     url = await get_client().get_user_profile_image_url(id, get_user_token())
     return {"url": url}
 
-@mcp.tool()
+@mcp.tool(tags={"write", "primary", "immich"})
 async def delete_my_onboarding(ctx: Context) -> dict[str, Any]:
     """Delete the current user's onboarding status."""
     return await get_client().delete_my_onboarding(get_user_token())
