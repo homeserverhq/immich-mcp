@@ -325,17 +325,17 @@ class UpdateMyPreferencesParam(BaseModel):
 # Server Tools
 # =============================================================================
 
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool()
 async def get_server_ping(ctx: Context) -> dict[str, Any]:
     """Check if the Immich server is reachable."""
     return await get_client().get_server_ping(get_user_token())
 
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(tags={"read"})
 async def get_server_version(ctx: Context) -> dict[str, Any]:
     """Get the Immich server version."""
     return await get_client().get_server_version(get_user_token())
 
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(tags={"immich"})
 async def get_server_about(ctx: Context) -> dict[str, Any]:
     """Get general server information."""
     return await get_client().get_server_about(get_user_token())
