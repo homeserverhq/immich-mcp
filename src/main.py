@@ -335,15 +335,15 @@ class CropParameters(BaseModel):
 
 
 class RotateParameters(BaseModel):
-    angle: float = Field(description="Rotation angle. Must be 0, 90, 180, or 270.")
+    angle: float = Field(description="0, 90, 180, or 270.")
 
 
 class MirrorParameters(BaseModel):
-    axis: str = Field(description="Mirror axis. 'horizontal' or 'vertical'.")
+    axis: str = Field(description="horizontal or vertical.")
 
 
 class AssetEditItem(BaseModel):
-    action: str = Field(description="Edit action. One of: 'crop', 'rotate', 'mirror'.")
+    action: str = Field(description="crop, rotate, or mirror.")
     parameters: Union[CropParameters, RotateParameters, MirrorParameters] = Field(
         description="Parameters for the edit action. Use the matching parameters type for the chosen action."
     )
@@ -733,7 +733,7 @@ async def get_all_assets(
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 100.
         include_all_fields: Default False (common fields only). Set True for all fields.
-        type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
+        type: IMAGE, VIDEO, AUDIO, or OTHER.
         isFavorite: Filter by favorite status.
         isMotion: Filter by motion photo.
         isOffline: Filter by offline status.
@@ -750,7 +750,7 @@ async def get_all_assets(
         tagIds: Comma-separated tag IDs.
         albumIds: Comma-separated album IDs.
         libraryId: Library ID to filter by.
-        order: Sort order (asc, desc).
+        order: asc or desc.
         withExif: Include EXIF data.
         withPeople: Include people data.
         withStacked: Include stacked assets.
@@ -953,7 +953,7 @@ order: Optional[str] = None,
         description: New album description.
         albumThumbnailAssetId: Asset ID for the album thumbnail.
         isActivityEnabled: Enable activity feed.
-        order: Asset order (e.g. desc, asc).
+        order: asc or desc.
     """
     params = UpdateAlbumParam(
         albumName=albumName, description=description,
@@ -1561,7 +1561,6 @@ include_all_fields: bool = False,
 
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def create_memory(
-type: str,
 memoryAt: str,
 year: int,
 ctx: Context,
@@ -1574,18 +1573,17 @@ seenAt: str = "",
     """Create a new memory.
 
     Args:
-        type: Memory type (on_this_day).
-        memoryAt: Memory date. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        memoryAt: Memory date. ISO 8601 format (2026-06-22T15:00:00-04:00).
         year: Year for the on_this_day memory.
         assetIds: Comma-separated asset IDs.
         isSaved: Save memory.
-        hideAt: Date when memory should be hidden. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
-        showAt: Date when memory should be shown. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
-        seenAt: Date when memory was seen. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        hideAt: Date when memory should be hidden. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        showAt: Date when memory should be shown. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        seenAt: Date when memory was seen. ISO 8601 format (2026-06-22T15:00:00-04:00).
     """
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()] if assetIds else []
     payload = {
-        "type": type,
+        "type": "on_this_day",
         "memoryAt": _normalize_datetime(memoryAt),
         "data": {"year": year},
     }
@@ -1819,7 +1817,7 @@ slug: str = "",
     """Create a new shared link.
 
     Args:
-        type: Type of shared link (ALBUM or INDIVIDUAL).
+        type: ALBUM or INDIVIDUAL.
         assetIds: Comma-separated asset IDs (for INDIVIDUAL type).
         albumId: Album ID (for ALBUM type).
         description: Link description.
@@ -2120,7 +2118,7 @@ withStacked: bool = False,
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 50.
         query: General search query.
-        type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
+        type: IMAGE, VIDEO, AUDIO, or OTHER.
         isFavorite: Filter by favorite status.
         isMotion: Filter by motion photo.
         isOffline: Filter by offline status.
@@ -2137,7 +2135,7 @@ withStacked: bool = False,
         tagIds: Comma-separated tag IDs.
         albumIds: Comma-separated album IDs.
         libraryId: Library ID to filter by.
-        order: Sort order (asc, desc).
+        order: asc or desc.
         withExif: Include EXIF data.
         withPeople: Include people data.
         withStacked: Include stacked assets.
@@ -2267,7 +2265,7 @@ async def search_random(
 
     Args:
         size: Number of results to return. Defaults to 100.
-        type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
+        type: IMAGE, VIDEO, AUDIO, or OTHER.
         isFavorite: Filter by favorite status.
         isMotion: Filter by motion photo.
         isNotInAlbum: Filter assets not in any album.
@@ -2345,7 +2343,7 @@ async def get_people_assets(
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 100.
         include_all_fields: Default False (common fields only). Set True for all fields.
-        type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
+        type: IMAGE, VIDEO, AUDIO, or OTHER.
         isFavorite: Filter by favorite status.
     """
     payload: dict[str, Any] = {"page": page, "size": size}
@@ -2642,7 +2640,7 @@ async def update_my_preferences(
     Parameters are grouped by category using underscore prefixes.
 
     Args:
-        albums_defaultAssetOrder: Default sort order for album assets. 'asc' or 'desc'.
+        albums_defaultAssetOrder: asc or desc.
         avatar_color: Avatar color. One of: 'primary', 'pink', 'red', 'yellow',
             'blue', 'green', 'purple', 'orange', 'gray', 'amber'.
         cast_gCastEnabled: Enable Google Cast support.

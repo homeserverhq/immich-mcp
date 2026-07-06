@@ -429,8 +429,7 @@ async def main():
         # =========================================================================
         log("\n=== Phase 3c: Memory CRUD ===")
         await run_test_with_store(session, "C1c create_memory", "create_memory",
-            {"type": "on_this_day", "year": 2026,
-             "memoryAt": "2026-06-22T15:00:00+00:00"},
+            {"year": 2026, "memoryAt": "2026-06-22T15:00:00+00:00"},
             store_key="create_memory")
         await run_test_with_store(session, "C2c get_memory_by_id", "get_memory_by_id",
             {"id": pick_id("create_memory")}, store_key="get_memory")
@@ -576,8 +575,7 @@ async def main():
         # =========================================================================
         log("\n=== Phase 9: Memory Relationship Tools ===")
         await run_test_with_store(session, "I0 create_fresh_memory", "create_memory",
-            {"type": "on_this_day", "year": 2026,
-             "memoryAt": "2026-06-22T15:00:00+00:00"},
+            {"year": 2026, "memoryAt": "2026-06-22T15:00:00+00:00"},
             store_key="fresh_memory")
         await run_test(session, "I1 add_assets_to_memory", "add_assets_to_memory",
             {"id": pick_id("fresh_memory"), "assetIds": ASSET_IDS[0]})
