@@ -30,6 +30,7 @@ with full CRUD, search, timeline, map, and relationship management.
 | `IMMICH_BASE_URL` | Yes | Docker-internal URL of the Immich server (e.g. `http://immich-app:2283`). |
 | `MCP_SERVER_PORT` | Yes | Port number the MCP server listens on |
 | `ALLOW_ALL_AGGREGATE` | No | When `true`, aggregate listing tools honor the `include_all_fields` parameter. When `false` (default), the parameter is silently forced to `False` for aggregate list operations. |
+| `IS_STATEFUL` | No | When `true`, uses stateful Streamable HTTP with session tracking. When `false` (default), uses stateless mode. |
 | `IMMICH_PUBLIC_URL` | No | Public-facing base URL of the Immich server (e.g. `https://immich.example.com`). Used to construct user-accessible URLs for thumbnails, originals, and profile images. Defaults to `IMMICH_BASE_URL` if not set. |
 
 ## 📦 Installation & Local Development
