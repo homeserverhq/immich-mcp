@@ -80,7 +80,7 @@ The MCP server serves at `http://immich-mcp:80/mcp` (Streamable HTTP).
 
 The server implements 130 MCP tools organized into the following categories:
 
-### 🖼️ Asset Management (21 tools)
+### 🖼️ Asset Management (22 tools)
 
 - `list_all_assets` — List every photo, video, and audio file in the library
 - `get_asset_by_id` — Get a single asset by ID
@@ -103,6 +103,7 @@ The server implements 130 MCP tools organized into the following categories:
 - `list_assets_by_tag` — Get all assets that have a specific tag
 - `list_assets_by_album` — Get all assets in an album
 - `list_assets_by_memory` — Get all assets in a memory
+- `list_assets_by_people` — List assets for specific people
 
 ### 💿 Album Management (11 tools)
 
@@ -130,7 +131,7 @@ The server implements 130 MCP tools organized into the following categories:
 - `tag_assets_by_tag` — Tag assets with a specific tag
 - `untag_assets` — Remove tag from assets
 
-### 👤 People & Faces (12 tools)
+### 👤 People & Faces (11 tools)
 
 - `list_all_people` — List all people
 - `get_person_by_id` — Get a single person
@@ -143,7 +144,6 @@ The server implements 130 MCP tools organized into the following categories:
 - `list_faces_by_asset` — Get faces for an asset
 - `reassign_face` — Reassign a face to a different person
 - `delete_face` — Delete a face
-- `list_assets_by_people` — List assets for specific people
 
 ### 📚 Library Management (7 tools)
 
