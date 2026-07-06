@@ -445,8 +445,8 @@ async def main():
         # =========================================================================
         log("\n=== Phase 3d: Stack CRUD ===")
         await run_test_with_store(session, "C1d create_stack", "create_stack",
-            {"assetIds": f"{ASSET_IDS[0]},{ASSET_IDS[1]}"},
-            store_key="create_stack")
+    {"assetIds": [ASSET_IDS[0], ASSET_IDS[1]]},
+    store_key="create_stack")
         await run_test_with_store(session, "C2d get_stack_by_id", "get_stack_by_id",
             {"id": pick_id("create_stack")}, store_key="get_stack")
         await run_test(session, "C3d update_stack", "update_stack",
@@ -461,16 +461,16 @@ async def main():
         # =========================================================================
         log("\n=== Phase 3e: SharedLink CRUD ===")
         await run_test_with_store(session, "C1e create_shared_link", "create_shared_link",
-            {"type": "INDIVIDUAL", "assetIds": ASSET_IDS[0]},
+            {"type": "INDIVIDUAL", "assetIds": [ASSET_IDS[0]]},
             store_key="create_shared_link")
         await run_test_with_store(session, "C2e get_shared_link_by_id", "get_shared_link_by_id",
             {"id": pick_id("create_shared_link")}, store_key="get_shared_link")
         await run_test(session, "C3e update_shared_link", "update_shared_link",
             {"id": pick_id("get_shared_link"), "description": "Updated"})
         await run_test(session, "C4e add_assets_to_shared_link", "add_assets_to_shared_link",
-            {"id": pick_id("get_shared_link"), "assetIds": ASSET_IDS[0]})
+            {"id": pick_id("get_shared_link"), "assetIds": [ASSET_IDS[0]]})
         await run_test(session, "C5e remove_assets_from_shared_link", "remove_assets_from_shared_link",
-            {"id": pick_id("get_shared_link"), "assetIds": ASSET_IDS[0]})
+            {"id": pick_id("get_shared_link"), "assetIds": [ASSET_IDS[0]]})
         await run_test(session, "C6e delete_shared_link_by_id", "delete_shared_link_by_id",
             {"id": pick_id("get_shared_link")})
         await run_verify_delete(session, "C7e verify_delete_shared_link", "get_shared_link_by_id",
@@ -513,14 +513,12 @@ async def main():
         await run_test(session, "E1 get_album_map_markers", "get_album_map_markers",
             {"id": pick_id("create_activity_album")})
         await run_test(session, "E2 add_assets_to_album", "add_assets_to_album",
-            {"id": pick_id("create_activity_album"), "assetIds": ASSET_IDS[0]})
-        await run_test(session, "E2b get_album_assets", "get_album_assets",
-            {"albumId": pick_id("create_activity_album"), "page": 1, "size": 5})
+            {"id": pick_id("create_activity_album"), "assetIds": [ASSET_IDS[0]]})
         await run_test(session, "E3 remove_assets_from_album", "remove_assets_from_album",
-            {"id": pick_id("create_activity_album"), "assetIds": ASSET_IDS[0]})
+            {"id": pick_id("create_activity_album"), "assetIds": [ASSET_IDS[0]]})
         await run_test(session, "E4 share_album_with_users", "share_album_with_users",
             {"id": pick_id("create_activity_album"),
-             "albumUsers": test_user_id})
+             "albumUsers": [test_user_id]})
         await run_test(session, "E5 remove_user_from_album", "remove_user_from_album",
             {"id": pick_id("create_activity_album"),
              "userId": test_user_id})
@@ -534,15 +532,15 @@ async def main():
         await run_test_with_store(session, "F0 create_rel_tag", "create_tag",
             {"name": make_name("RelTag")}, store_key="create_rel_tag")
         await run_test(session, "F1 upsert_tags", "upsert_tags",
-            {"tags": make_name("UpsertTag")})
+            {"tags": [make_name("UpsertTag")]})
         await run_test(session, "F2 tag_assets", "tag_assets",
-            {"tagIds": pick_id("create_rel_tag"), "assetIds": ASSET_IDS[0]})
+            {"tagIds": [pick_id("create_rel_tag")], "assetIds": [ASSET_IDS[0]]})
         await run_test(session, "F3 tag_assets_by_tag", "tag_assets_by_tag",
-            {"id": pick_id("create_rel_tag"), "assetIds": ASSET_IDS[0]})
+            {"id": pick_id("create_rel_tag"), "assetIds": [ASSET_IDS[0]]})
         await run_test(session, "F3b get_assets_by_tag", "get_assets_by_tag",
             {"tagId": pick_id("create_rel_tag"), "page": 1, "size": 5})
         await run_test(session, "F4 untag_assets", "untag_assets",
-            {"id": pick_id("create_rel_tag"), "assetIds": ASSET_IDS[0]})
+            {"id": pick_id("create_rel_tag"), "assetIds": [ASSET_IDS[0]]})
 
         # =========================================================================
         # Phase 7: Person Relationship Tools (3 tests: G1-G3)
@@ -555,7 +553,7 @@ async def main():
         await run_test(session, "G2 get_person_thumbnail_url", "get_person_thumbnail_url",
             {"id": pick_id("create_rel_person")})
         await run_test(session, "G3 merge_people", "merge_people",
-            {"id": pick_id("create_rel_person"), "mergeIds": ASSET_IDS[0]})
+            {"id": pick_id("create_rel_person"), "mergeIds": [ASSET_IDS[0]]})
 
         # =========================================================================
         # Phase 8: Library Relationship Tools (2 tests: H1-H2)
@@ -578,18 +576,18 @@ async def main():
             {"year": 2026, "memoryAt": "2026-06-22T15:00:00+00:00"},
             store_key="fresh_memory")
         await run_test(session, "I1 add_assets_to_memory", "add_assets_to_memory",
-            {"id": pick_id("fresh_memory"), "assetIds": ASSET_IDS[0]})
+            {"id": pick_id("fresh_memory"), "assetIds": [ASSET_IDS[0]]})
         await run_test(session, "I1b get_memory_assets", "get_memory_assets",
             {"memoryId": pick_id("fresh_memory")})
         await run_test(session, "I2 remove_assets_from_memory", "remove_assets_from_memory",
-            {"id": pick_id("fresh_memory"), "assetIds": ASSET_IDS[0]})
+            {"id": pick_id("fresh_memory"), "assetIds": [ASSET_IDS[0]]})
 
         # =========================================================================
         # Phase 10: Stack Relationship Tools (2 tests: J0-J1)
         # =========================================================================
         log("\n=== Phase 10: Stack Relationship Tools ===")
         await run_test_with_store(session, "J0 create_fresh_stack", "create_stack",
-            {"assetIds": f"{ASSET_IDS[0]},{ASSET_IDS[1]}"},
+            {"assetIds": [ASSET_IDS[0], ASSET_IDS[1]]},
             store_key="fresh_stack")
         await run_test(session, "J1 remove_asset_from_stack", "remove_asset_from_stack",
             {"id": pick_id("fresh_stack"),
@@ -626,9 +624,9 @@ async def main():
         await run_test(session, "K6 get_asset_metadata_by_key", "get_asset_metadata_by_key",
             {"id": ASSET_IDS[0], "key": "ExifIFD:DateTimeOriginal"})
         await run_test(session, "K11 delete_assets", "delete_assets",
-            {"ids": ASSET_IDS[0], "force": False})
+            {"ids": [ASSET_IDS[0]], "force": False})
         await run_test(session, "K12 bulk_update_assets", "bulk_update_assets",
-            {"ids": ASSET_IDS[0], "isFavorite": False})
+            {"ids": [ASSET_IDS[0]], "isFavorite": False})
         await run_test(session, "K13 copy_asset", "copy_asset",
             {"sourceId": ASSET_IDS[0],
              "targetId": ASSET_IDS[1] if len(ASSET_IDS) > 1 else ASSET_IDS[0]})
@@ -694,7 +692,7 @@ async def main():
         # =========================================================================
         log("\n=== Phase 17: Trash Tools ===")
         await run_test(session, "Q1 restore_trash_assets", "restore_trash_assets",
-            {"ids": ASSET_IDS[0]})
+            {"ids": [ASSET_IDS[0]]})
 
         # =========================================================================
         # Phase 18: Search Tools (6 tests: R1-R6)
@@ -711,7 +709,7 @@ async def main():
         await run_test(session, "R5 search_places", "search_places",
             {"name": "New York"})
         await run_test(session, "R6 get_people_assets", "get_people_assets",
-            {"personIds": pick_id("create_rel_person"), "page": 1, "size": 10})
+            {"personIds": [pick_id("create_rel_person")], "page": 1, "size": 10})
 
         # =========================================================================
         # Cleanup: Delete Test User

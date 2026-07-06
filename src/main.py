@@ -612,25 +612,24 @@ async def update_asset_metadata(
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def delete_assets(
-ids: str,
+ids: list[str],
 ctx: Context,
 force: bool = False,
 ) -> dict[str, Any]:
     """Delete assets by IDs.
 
     Args:
-        ids: Comma-separated list of asset IDs to delete.
+        ids: List of asset IDs to delete.
         force: Force delete even if in trash.
     """
-    id_list = [x.strip() for x in ids.split(",") if x.strip()]
-    payload = {"ids": id_list}
+    payload = {"ids": ids}
     if force:
         payload["force"] = True
     return await get_client().delete_assets(payload, get_user_token())
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def bulk_update_assets(
-ids: str,
+ids: list[str],
 ctx: Context,
 isFavorite: Optional[bool] = None,
 description: Optional[str] = None,
@@ -645,7 +644,7 @@ timeZone: Optional[str] = None,
     """Update multiple assets at once.
 
     Args:
-        ids: Comma-separated list of asset IDs to update.
+        ids: List of asset IDs to update.
         isFavorite: Mark as favorite.
         description: Asset description.
         latitude: Latitude coordinate.
@@ -656,9 +655,8 @@ timeZone: Optional[str] = None,
         duplicateId: Duplicate ID.
         timeZone: Time zone (IANA timezone).
     """
-    id_list = [x.strip() for x in ids.split(",") if x.strip()]
     params = AssetBulkUpdateParam(
-        ids=id_list,
+        ids=ids,
         isFavorite=isFavorite, description=description,
         latitude=latitude, longitude=longitude,
         dateTimeOriginal=dateTimeOriginal, rating=rating,
@@ -718,9 +716,9 @@ async def get_all_assets(
     country: Optional[str] = None,
     make: Optional[str] = None,
     model: Optional[str] = None,
-    personIds: str = "",
-    tagIds: str = "",
-    albumIds: str = "",
+    personIds: list[str] = [],
+    tagIds: list[str] = [],
+    albumIds: list[str] = [],
     libraryId: Optional[str] = None,
     order: Optional[str] = None,
     withExif: bool = False,
@@ -746,9 +744,9 @@ async def get_all_assets(
         country: Filter by country name.
         make: Filter by camera make.
         model: Filter by camera model.
-        personIds: Comma-separated person IDs.
-        tagIds: Comma-separated tag IDs.
-        albumIds: Comma-separated album IDs.
+        personIds: List of person IDs.
+        tagIds: List of tag IDs.
+        albumIds: List of album IDs.
         libraryId: Library ID to filter by.
         order: asc or desc.
         withExif: Include EXIF data.
@@ -769,9 +767,9 @@ async def get_all_assets(
     if country: payload["country"] = country
     if make: payload["make"] = make
     if model: payload["model"] = model
-    if personIds: payload["personIds"] = [p.strip() for p in personIds.split(",") if p.strip()]
-    if tagIds: payload["tagIds"] = [t.strip() for t in tagIds.split(",") if t.strip()]
-    if albumIds: payload["albumIds"] = [a.strip() for a in albumIds.split(",") if a.strip()]
+    if personIds: payload["personIds"] = personIds
+    if tagIds: payload["tagIds"] = tagIds
+    if albumIds: payload["albumIds"] = albumIds
     if libraryId: payload["libraryId"] = libraryId
     if order: payload["order"] = order
     if withExif: payload["withExif"] = True
@@ -885,7 +883,6 @@ include_all_fields: bool = False,
 
     Args:
         include_all_fields: Default False (common fields only). Set True for all fields.
-            every album in the response.
     """
     data = await get_client().get_all_albums(
         get_user_token(),
@@ -914,25 +911,24 @@ async def create_album(
 albumName: str,
 ctx: Context,
 description: str = "",
-albumUsers: str = "",
-assetIds: str = "",
+albumUsers: list[str] = [],
+assetIds: list[str] = [],
 ) -> dict[str, Any]:
     """Create a new album.
 
     Args:
         albumName: Name of the album.
         description: Description of the album.
-        albumUsers: Comma-separated user IDs to share with.
-        assetIds: Comma-separated asset IDs to add initially.
+        albumUsers: List of user IDs to share with.
+        assetIds: List of asset IDs to add initially.
     """
-    users_list = [{"userId": u.strip()} for u in albumUsers.split(",") if u.strip()] if albumUsers else []
-    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()] if assetIds else []
+    users_list = [{"userId": u} for u in albumUsers]
     params = CreateAlbumParam(albumName=albumName, description=description)
     payload = params.model_dump(exclude_unset=True, exclude_none=True)
     if users_list:
         payload["albumUsers"] = users_list
-    if asset_list:
-        payload["assetIds"] = asset_list
+    if assetIds:
+        payload["assetIds"] = assetIds
     return await get_client().create_album(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "primary", "immich"})
@@ -979,50 +975,48 @@ async def delete_album_by_id(
 @mcp.tool(tags={"write", "primary", "immich"})
 async def add_assets_to_album(
     id: str,
-    assetIds: str,
+    assetIds: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Add assets to an album.
 
     Args:
         id: The unique ID of the album.
-        assetIds: Comma-separated asset IDs.
+        assetIds: List of asset IDs.
     """
-    id_list = [a.strip() for a in assetIds.split(",") if a.strip()]
-    payload = {"ids": id_list}
+    payload = {"ids": assetIds}
     data = await get_client().add_assets_to_album(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def remove_assets_from_album(
     id: str,
-    assetIds: str,
+    assetIds: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Remove assets from an album.
 
     Args:
         id: The unique ID of the album.
-        assetIds: Comma-separated asset IDs.
+        assetIds: List of asset IDs.
     """
-    id_list = [a.strip() for a in assetIds.split(",") if a.strip()]
-    payload = {"ids": id_list}
+    payload = {"ids": assetIds}
     data = await get_client().remove_assets_from_album(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def share_album_with_users(
     id: str,
-    albumUsers: str,
+    albumUsers: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Share an album with other users.
 
     Args:
         id: The unique ID of the album.
-        albumUsers: Comma-separated user IDs to share with.
+        albumUsers: List of user IDs to share with.
     """
-    users_list = [{"userId": u.strip()} for u in albumUsers.split(",") if u.strip()]
+    users_list = [{"userId": u} for u in albumUsers]
     payload = {"albumUsers": users_list}
     return await get_client().add_users_to_album(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
@@ -1146,67 +1140,62 @@ async def delete_tag_by_id(
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def upsert_tags(
-    tags: str,
+    tags: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Upsert tags by name.
 
     Args:
-        tags: Comma-separated tag names to upsert.
+        tags: List of tag names to upsert.
     """
-    tag_list = [t.strip() for t in tags.split(",") if t.strip()]
-    payload = {"tags": tag_list}
+    payload = {"tags": tags}
     data = await get_client().upsert_tags(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def tag_assets(
-    assetIds: str,
-    tagIds: str,
+    assetIds: list[str],
+    tagIds: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Tag assets with specified tags.
 
     Args:
-        assetIds: Comma-separated asset IDs.
-        tagIds: Comma-separated tag IDs.
+        assetIds: List of asset IDs.
+        tagIds: List of tag IDs.
     """
-    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
-    tag_list = [t.strip() for t in tagIds.split(",") if t.strip()]
-    payload = {"assetIds": asset_list, "tagIds": tag_list}
+    payload = {"assetIds": assetIds, "tagIds": tagIds}
     return await get_client().tag_assets(payload, get_user_token())
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def tag_assets_by_tag(
     id: str,
-    assetIds: str,
+    assetIds: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Tag assets with a specific tag.
 
     Args:
         id: The tag ID.
-        assetIds: Comma-separated asset IDs.
+        assetIds: List of asset IDs.
     """
-    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
-    payload = {"ids": asset_list}
+    payload = {"ids": assetIds}
     data = await get_client().tag_assets_by_tag(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def untag_assets(
     id: str,
-    assetIds: str,
+    assetIds: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Remove a tag from assets.
 
     Args:
         id: The tag ID.
-        assetIds: Comma-separated asset IDs.
+        assetIds: List of asset IDs.
     """
-    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
-    payload = {"ids": asset_list}
+    payload = {"ids": assetIds}
     data = await get_client().untag_assets(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
@@ -1318,17 +1307,16 @@ async def delete_person_by_id(
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def merge_people(
     id: str,
-    mergeIds: str,
+    mergeIds: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Merge people into a single person.
 
     Args:
         id: The target person ID to keep.
-        mergeIds: Comma-separated person IDs to merge into the target.
+        mergeIds: List of person IDs to merge into the target.
     """
-    id_list = [i.strip() for i in mergeIds.split(",") if i.strip()]
-    payload = {"ids": id_list}
+    payload = {"ids": mergeIds}
     data = await get_client().merge_people(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
 
@@ -1442,25 +1430,23 @@ async def create_library(
 ownerId: str,
 ctx: Context,
 name: str = "",
-importPaths: str = "",
-exclusionPatterns: str = "",
+importPaths: list[str] = [],
+exclusionPatterns: list[str] = [],
 ) -> dict[str, Any]:
     """Create a new library.
 
     Args:
         ownerId: Owner user ID.
         name: Library name.
-        importPaths: Comma-separated import paths.
-        exclusionPatterns: Comma-separated exclusion patterns.
+        importPaths: List of import paths.
+        exclusionPatterns: List of exclusion patterns.
     """
-    import_list = [p.strip() for p in importPaths.split(",") if p.strip()] if importPaths else []
-    exclude_list = [p.strip() for p in exclusionPatterns.split(",") if p.strip()] if exclusionPatterns else []
     params = CreateLibraryParam(ownerId=ownerId, name=name)
     payload = params.model_dump(exclude_unset=True, exclude_none=True)
-    if import_list:
-        payload["importPaths"] = import_list
-    if exclude_list:
-        payload["exclusionPatterns"] = exclude_list
+    if importPaths:
+        payload["importPaths"] = importPaths
+    if exclusionPatterns:
+        payload["exclusionPatterns"] = exclusionPatterns
     return await get_client().create_library(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "advanced", "immich"})
@@ -1468,23 +1454,23 @@ async def update_library(
 id: str,
 ctx: Context,
 name: Optional[str] = None,
-importPaths: Optional[str] = None,
-exclusionPatterns: Optional[str] = None,
+importPaths: Optional[list[str]] = None,
+exclusionPatterns: Optional[list[str]] = None,
 ) -> dict[str, Any]:
     """Update a library.
 
     Args:
         id: The unique ID of the library.
         name: Library name.
-        importPaths: Comma-separated import paths.
-        exclusionPatterns: Comma-separated exclusion patterns.
+        importPaths: List of import paths.
+        exclusionPatterns: List of exclusion patterns.
     """
     params = UpdateLibraryParam(name=name)
     payload = params.model_dump(exclude_unset=True, exclude_none=True)
     if importPaths is not None:
-        payload["importPaths"] = [p.strip() for p in importPaths.split(",") if p.strip()]
+        payload["importPaths"] = importPaths
     if exclusionPatterns is not None:
-        payload["exclusionPatterns"] = [p.strip() for p in exclusionPatterns.split(",") if p.strip()]
+        payload["exclusionPatterns"] = exclusionPatterns
     return await get_client().update_library(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "advanced", "immich"})
@@ -1564,7 +1550,7 @@ async def create_memory(
 memoryAt: str,
 year: int,
 ctx: Context,
-assetIds: str = "",
+assetIds: list[str] = [],
 isSaved: bool = False,
 hideAt: str = "",
 showAt: str = "",
@@ -1575,20 +1561,19 @@ seenAt: str = "",
     Args:
         memoryAt: Memory date. ISO 8601 format (2026-06-22T15:00:00-04:00).
         year: Year for the on_this_day memory.
-        assetIds: Comma-separated asset IDs.
+        assetIds: List of asset IDs.
         isSaved: Save memory.
         hideAt: Date when memory should be hidden. ISO 8601 format (2026-06-22T15:00:00-04:00).
         showAt: Date when memory should be shown. ISO 8601 format (2026-06-22T15:00:00-04:00).
         seenAt: Date when memory was seen. ISO 8601 format (2026-06-22T15:00:00-04:00).
     """
-    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()] if assetIds else []
     payload = {
         "type": "on_this_day",
         "memoryAt": _normalize_datetime(memoryAt),
         "data": {"year": year},
     }
-    if asset_list:
-        payload["assetIds"] = asset_list
+    if assetIds:
+        payload["assetIds"] = assetIds
     if isSaved:
         payload["isSaved"] = True
     if hideAt:
@@ -1635,34 +1620,32 @@ async def delete_memory_by_id(
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def add_assets_to_memory(
     id: str,
-    assetIds: str,
+    assetIds: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Add assets to a memory.
 
     Args:
         id: The unique ID of the memory.
-        assetIds: Comma-separated asset IDs.
+        assetIds: List of asset IDs.
     """
-    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
-    payload = {"ids": asset_list}
+    payload = {"ids": assetIds}
     data = await get_client().add_assets_to_memory(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def remove_assets_from_memory(
     id: str,
-    assetIds: str,
+    assetIds: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Remove assets from a memory.
 
     Args:
         id: The unique ID of the memory.
-        assetIds: Comma-separated asset IDs to remove.
+        assetIds: List of asset IDs to remove.
     """
-    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
-    payload = {"ids": asset_list}
+    payload = {"ids": assetIds}
     data = await get_client().remove_assets_from_memory(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
@@ -1709,16 +1692,15 @@ include_all_fields: bool = False,
 
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def create_stack(
-    assetIds: str,
+    assetIds: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Create a stack from assets (minimum 2 assets).
 
     Args:
-        assetIds: Comma-separated asset IDs. First becomes primary (required, min 2).
+        assetIds: List of asset IDs. First becomes primary (required, min 2).
     """
-    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
-    payload = {"assetIds": asset_list}
+    payload = {"assetIds": assetIds}
     return await get_client().create_stack(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "advanced", "immich"})
@@ -1804,8 +1786,8 @@ include_all_fields: bool = False,
 async def create_shared_link(
 type: str,
 ctx: Context,
-assetIds: str = "",
-albumId: str = "",
+    assetIds: list[str] = [],
+    albumId: str = "",
 description: str = "",
 expiresAt: str = "",
 password: str = "",
@@ -1818,7 +1800,7 @@ slug: str = "",
 
     Args:
         type: ALBUM or INDIVIDUAL.
-        assetIds: Comma-separated asset IDs (for INDIVIDUAL type).
+        assetIds: List of asset IDs (for INDIVIDUAL type).
         albumId: Album ID (for ALBUM type).
         description: Link description.
         expiresAt: Expiration date. ISO 8601 format (2026-06-22T15:00:00-04:00).
@@ -1836,7 +1818,7 @@ slug: str = "",
     payload = params.model_dump(exclude_unset=True, exclude_none=True)
     payload = {k: v for k, v in payload.items() if v != ""}
     if assetIds:
-        payload["assetIds"] = [a.strip() for a in assetIds.split(",") if a.strip()]
+        payload["assetIds"] = assetIds
     if albumId:
         payload["albumId"] = albumId
     return await get_client().create_shared_link(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
@@ -1889,34 +1871,32 @@ async def delete_shared_link_by_id(
 @mcp.tool(tags={"write", "primary", "immich"})
 async def add_assets_to_shared_link(
     id: str,
-    assetIds: str,
+    assetIds: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Add assets to a shared link.
 
     Args:
         id: The unique ID of the shared link.
-        assetIds: Comma-separated asset IDs to add.
+        assetIds: List of asset IDs to add.
     """
-    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
-    payload = {"assetIds": asset_list}
+    payload = {"assetIds": assetIds}
     data = await get_client().add_assets_to_shared_link(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def remove_assets_from_shared_link(
     id: str,
-    assetIds: str,
+    assetIds: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Remove assets from a shared link.
 
     Args:
         id: The unique ID of the shared link.
-        assetIds: Comma-separated asset IDs to remove.
+        assetIds: List of asset IDs to remove.
     """
-    asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
-    payload = {"assetIds": asset_list}
+    payload = {"assetIds": assetIds}
     data = await get_client().remove_assets_from_shared_link(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
 
@@ -2103,14 +2083,14 @@ state: Optional[str] = None,
 country: Optional[str] = None,
 make: Optional[str] = None,
 model: Optional[str] = None,
-personIds: str = "",
-tagIds: str = "",
-albumIds: str = "",
-libraryId: Optional[str] = None,
-order: Optional[str] = None,
-withExif: bool = False,
-withPeople: bool = False,
-withStacked: bool = False,
+    personIds: list[str] = [],
+    tagIds: list[str] = [],
+    albumIds: list[str] = [],
+    libraryId: Optional[str] = None,
+    order: Optional[str] = None,
+    withExif: bool = False,
+    withPeople: bool = False,
+    withStacked: bool = False,
 ) -> dict[str, Any]:
     """Search assets by metadata fields.
 
@@ -2131,9 +2111,9 @@ withStacked: bool = False,
         country: Filter by country name.
         make: Filter by camera make.
         model: Filter by camera model.
-        personIds: Comma-separated person IDs.
-        tagIds: Comma-separated tag IDs.
-        albumIds: Comma-separated album IDs.
+        personIds: List of person IDs.
+        tagIds: List of tag IDs.
+        albumIds: List of album IDs.
         libraryId: Library ID to filter by.
         order: asc or desc.
         withExif: Include EXIF data.
@@ -2155,9 +2135,9 @@ withStacked: bool = False,
     if country: payload["country"] = country
     if make: payload["make"] = make
     if model: payload["model"] = model
-    if personIds: payload["personIds"] = [p.strip() for p in personIds.split(",") if p.strip()]
-    if tagIds: payload["tagIds"] = [t.strip() for t in tagIds.split(",") if t.strip()]
-    if albumIds: payload["albumIds"] = [a.strip() for a in albumIds.split(",") if a.strip()]
+    if personIds: payload["personIds"] = personIds
+    if tagIds: payload["tagIds"] = tagIds
+    if albumIds: payload["albumIds"] = albumIds
     if libraryId: payload["libraryId"] = libraryId
     if order: payload["order"] = order
     if withExif: payload["withExif"] = True
@@ -2179,10 +2159,10 @@ state: Optional[str] = None,
 country: Optional[str] = None,
 make: Optional[str] = None,
 model: Optional[str] = None,
-personIds: str = "",
-tagIds: str = "",
-albumIds: str = "",
-libraryId: Optional[str] = None,
+    personIds: list[str] = [],
+    tagIds: list[str] = [],
+    albumIds: list[str] = [],
+    libraryId: Optional[str] = None,
 ) -> dict[str, Any]:
     """Search assets using natural language (CLIP-based smart search).
 
@@ -2198,9 +2178,9 @@ libraryId: Optional[str] = None,
         country: Filter by country.
         make: Filter by camera make.
         model: Filter by camera model.
-        personIds: Comma-separated person IDs.
-        tagIds: Comma-separated tag IDs.
-        albumIds: Comma-separated album IDs.
+        personIds: List of person IDs.
+        tagIds: List of tag IDs.
+        albumIds: List of album IDs.
         libraryId: Library ID.
     """
     payload = {"query": query, "page": page, "size": size}
@@ -2211,9 +2191,9 @@ libraryId: Optional[str] = None,
     if country: payload["country"] = country
     if make: payload["make"] = make
     if model: payload["model"] = model
-    if personIds: payload["personIds"] = [p.strip() for p in personIds.split(",") if p.strip()]
-    if tagIds: payload["tagIds"] = [t.strip() for t in tagIds.split(",") if t.strip()]
-    if albumIds: payload["albumIds"] = [a.strip() for a in albumIds.split(",") if a.strip()]
+    if personIds: payload["personIds"] = personIds
+    if tagIds: payload["tagIds"] = tagIds
+    if albumIds: payload["albumIds"] = albumIds
     if libraryId: payload["libraryId"] = libraryId
     return await get_client().search_smart(payload, get_user_token(), include_all_fields=include_all_fields)
 
@@ -2254,9 +2234,9 @@ async def search_random(
     isFavorite: Optional[bool] = None,
     isMotion: Optional[bool] = None,
     isNotInAlbum: Optional[bool] = None,
-    personIds: str = "",
-    tagIds: str = "",
-    albumIds: str = "",
+    personIds: list[str] = [],
+    tagIds: list[str] = [],
+    albumIds: list[str] = [],
     libraryId: Optional[str] = None,
     city: Optional[str] = None,
     state: Optional[str] = None,
@@ -2273,9 +2253,9 @@ async def search_random(
         isFavorite: Filter by favorite status.
         isMotion: Filter by motion photo.
         isNotInAlbum: Filter assets not in any album.
-        personIds: Comma-separated person IDs.
-        tagIds: Comma-separated tag IDs.
-        albumIds: Comma-separated album IDs.
+        personIds: List of person IDs.
+        tagIds: List of tag IDs.
+        albumIds: List of album IDs.
         libraryId: Library ID.
         city: Filter by city name.
         state: Filter by state/province name.
@@ -2288,9 +2268,9 @@ async def search_random(
     if isFavorite is not None: payload["isFavorite"] = isFavorite
     if isMotion is not None: payload["isMotion"] = isMotion
     if isNotInAlbum is not None: payload["isNotInAlbum"] = isNotInAlbum
-    if personIds: payload["personIds"] = [p.strip() for p in personIds.split(",") if p.strip()]
-    if tagIds: payload["tagIds"] = [t.strip() for t in tagIds.split(",") if t.strip()]
-    if albumIds: payload["albumIds"] = [a.strip() for a in albumIds.split(",") if a.strip()]
+    if personIds: payload["personIds"] = personIds
+    if tagIds: payload["tagIds"] = tagIds
+    if albumIds: payload["albumIds"] = albumIds
     if libraryId: payload["libraryId"] = libraryId
     if city: payload["city"] = city
     if state: payload["state"] = state
@@ -2333,7 +2313,7 @@ async def search_places(
 @mcp.tool(tags={"read", "primary", "immich"})
 async def get_people_assets(
     ctx: Context,
-    personIds: str,
+    personIds: list[str],
     page: int = 1,
     size: int = 100,
     include_all_fields: bool = False,
@@ -2343,7 +2323,7 @@ async def get_people_assets(
     """List assets for specific people.
 
     Args:
-        personIds: Comma-separated person IDs.
+        personIds: List of person IDs.
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 100.
         include_all_fields: Default False (common fields only). Set True for all fields.
@@ -2351,9 +2331,8 @@ async def get_people_assets(
         isFavorite: Filter by favorite status.
     """
     payload: dict[str, Any] = {"page": page, "size": size}
-    pid_list = [p.strip() for p in personIds.split(",") if p.strip()]
-    if pid_list:
-        payload["personIds"] = pid_list
+    if personIds:
+        payload["personIds"] = personIds
     if type: payload["type"] = type
     if isFavorite is not None: payload["isFavorite"] = isFavorite
     return await get_client().search_metadata(
@@ -2503,16 +2482,15 @@ async def restore_trash(ctx: Context) -> dict[str, Any]:
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def restore_trash_assets(
-    ids: str,
+    ids: list[str],
     ctx: Context
 ) -> dict[str, Any]:
     """Restore specific trashed assets.
 
     Args:
-        ids: Comma-separated asset IDs to restore.
+        ids: List of asset IDs to restore.
     """
-    id_list = [i.strip() for i in ids.split(",") if i.strip()]
-    payload = {"ids": id_list}
+    payload = {"ids": ids}
     return await get_client().restore_trash_assets(payload, get_user_token())
 
 # =============================================================================
