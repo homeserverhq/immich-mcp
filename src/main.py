@@ -725,7 +725,7 @@ async def list_all_assets(
     withPeople: bool = False,
     withStacked: bool = False,
 ) -> dict[str, Any]:
-    """List all assets with optional filters and pagination.
+    """List every photo, video, and audio file in the library. Returns thumbnails, file metadata, playback URLs, and owner info for each asset.
 
     Args:
         page: Page number. Defaults to 1.
