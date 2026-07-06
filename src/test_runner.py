@@ -507,13 +507,15 @@ async def main():
                        {"id": pick_id("created_activity")})
 
         # =========================================================================
-        # Phase 5: Album Relationship Tools (6 tests: E1-E5 + D5)
+        # Phase 5: Album Relationship Tools (7 tests: E1-E5 + E2b + D5)
         # =========================================================================
         log("\n=== Phase 5: Album Relationship Tools ===")
         await run_test(session, "E1 list_album_map_markers", "list_album_map_markers",
             {"id": pick_id("create_activity_album")})
         await run_test(session, "E2 add_assets_to_album", "add_assets_to_album",
             {"id": pick_id("create_activity_album"), "assetIds": [ASSET_IDS[0]]})
+        await run_test(session, "E2b list_assets_by_album", "list_assets_by_album",
+            {"albumId": pick_id("create_activity_album"), "page": 1, "size": 5})
         await run_test(session, "E3 remove_assets_from_album", "remove_assets_from_album",
             {"id": pick_id("create_activity_album"), "assetIds": [ASSET_IDS[0]]})
         await run_test(session, "E4 share_album_with_users", "share_album_with_users",
@@ -668,14 +670,19 @@ async def main():
             {"id": ASSET_IDS[0]})
 
         # =========================================================================
-        # Phase 15: Server & System Tools (1 test: O1)
+        # Phase 15: Server & System Tools (4 tests: O1, S1-S3)
         # =========================================================================
         log("\n=== Phase 15: Server & System Tools ===")
         await run_test(session, "O1 list_time_bucket_assets", "list_time_bucket_assets",
             {"size": "MONTH", "timeBucket": "2026-06-01"})
+        await run_test(session, "S1 list_time_buckets", "list_time_buckets",
+            {"size": "MONTH"})
+        await run_test(session, "S2 list_map_markers", "list_map_markers", {})
+        await run_test(session, "S3 reverse_geocode", "reverse_geocode",
+            {"lat": 40.7128, "lon": -74.0060})
 
         # =========================================================================
-        # Phase 16: User & Account Tools (4 tests: P1-P4)
+        # Phase 16: User & Account Tools (5 tests: P1-P5)
         # =========================================================================
         log("\n=== Phase 16: User & Account Tools ===")
         await run_test(session, "P1 get_user_by_id", "get_user_by_id",
@@ -686,6 +693,7 @@ async def main():
             {"ratings_enabled": True})
         await run_test(session, "P4 get_user_profile_image_url", "get_user_profile_image_url",
             {"id": pick_id("my_user_info")})
+        await run_test(session, "P5 delete_my_onboarding", "delete_my_onboarding", {})
 
         # =========================================================================
         # Phase 17: Trash Tools (1 test: Q1)
@@ -695,7 +703,7 @@ async def main():
             {"ids": [ASSET_IDS[0]]})
 
         # =========================================================================
-        # Phase 18: Search Tools (6 tests: R1-R6)
+        # Phase 18: Search Tools (7 tests: R1-R7)
         # =========================================================================
         log("\n=== Phase 18: Search Tools ===")
         await run_test(session, "R1 search_metadata", "search_metadata",
@@ -710,6 +718,8 @@ async def main():
             {"name": "New York"})
         await run_test(session, "R6 list_assets_by_people", "list_assets_by_people",
             {"personIds": [pick_id("create_rel_person")], "page": 1, "size": 10})
+        await run_test(session, "R7 search_suggestions", "search_suggestions",
+            {"type": "camera-make", "query": "a"})
 
         # =========================================================================
         # Cleanup: Delete Test User
