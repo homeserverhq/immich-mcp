@@ -349,77 +349,7 @@ class AssetEditItem(BaseModel):
     )
 
 
-class AlbumsPref(BaseModel):
-    defaultAssetOrder: Optional[str] = Field(default=None, description="Default sort order for album assets. 'asc' or 'desc'.")
-
-
-class AvatarPref(BaseModel):
-    color: Optional[str] = Field(default=None, description="Avatar color. One of: 'primary', 'pink', 'red', 'yellow', 'blue', 'green', 'purple', 'orange', 'gray', 'amber'.")
-
-
-class CastPref(BaseModel):
-    gCastEnabled: Optional[bool] = Field(default=None, description="Enable Google Cast support.")
-
-
-class DownloadPref(BaseModel):
-    archiveSize: Optional[int] = Field(default=None, description="Download archive size limit in bytes.")
-    includeEmbeddedVideos: Optional[bool] = Field(default=None, description="Include embedded videos in downloads.")
-
-
-class EmailNotificationsPref(BaseModel):
-    enabled: Optional[bool] = Field(default=None, description="Enable email notifications.")
-    albumInvite: Optional[bool] = Field(default=None, description="Notify on album invite.")
-    albumUpdate: Optional[bool] = Field(default=None, description="Notify on album update.")
-
-
-class FoldersPref(BaseModel):
-    enabled: Optional[bool] = Field(default=None, description="Enable folder views.")
-    sidebarWeb: Optional[bool] = Field(default=None, description="Show folders in web sidebar.")
-
-
-class MemoriesPref(BaseModel):
-    enabled: Optional[bool] = Field(default=None, description="Enable memories feature.")
-    duration: Optional[int] = Field(default=None, description="Memory display duration in seconds.")
-
-
-class PeoplePref(BaseModel):
-    enabled: Optional[bool] = Field(default=None, description="Enable people/facial recognition.")
-    sidebarWeb: Optional[bool] = Field(default=None, description="Show people in web sidebar.")
-    minimumFaces: Optional[int] = Field(default=None, description="Minimum number of faces to show a person.")
-
-
-class PurchasePref(BaseModel):
-    showSupportBadge: Optional[bool] = Field(default=None, description="Show support badge.")
-    hideBuyButtonUntil: Optional[str] = Field(default=None, description="Hide purchase button until date. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).")
-
-
-class RatingsPref(BaseModel):
-    enabled: Optional[bool] = Field(default=None, description="Enable star ratings.")
-
-
-class SharedLinksPref(BaseModel):
-    enabled: Optional[bool] = Field(default=None, description="Enable shared links.")
-    sidebarWeb: Optional[bool] = Field(default=None, description="Show shared links in web sidebar.")
-
-
-class TagsPref(BaseModel):
-    enabled: Optional[bool] = Field(default=None, description="Enable tags.")
-    sidebarWeb: Optional[bool] = Field(default=None, description="Show tags in web sidebar.")
-
-
-class UserPreferences(BaseModel):
-    albums: Optional[AlbumsPref] = Field(default=None, description="Album preferences.")
-    avatar: Optional[AvatarPref] = Field(default=None, description="Avatar preferences.")
-    cast: Optional[CastPref] = Field(default=None, description="Cast/chromecast preferences.")
-    download: Optional[DownloadPref] = Field(default=None, description="Download preferences.")
-    emailNotifications: Optional[EmailNotificationsPref] = Field(default=None, description="Email notification preferences.")
-    folders: Optional[FoldersPref] = Field(default=None, description="Folder view preferences.")
-    memories: Optional[MemoriesPref] = Field(default=None, description="Memory feature preferences.")
-    people: Optional[PeoplePref] = Field(default=None, description="People/facial recognition preferences.")
-    purchase: Optional[PurchasePref] = Field(default=None, description="Purchase/license preferences.")
-    ratings: Optional[RatingsPref] = Field(default=None, description="Star rating preferences.")
-    sharedLinks: Optional[SharedLinksPref] = Field(default=None, description="Shared link preferences.")
-    tags: Optional[TagsPref] = Field(default=None, description="Tag preferences.")
+# Preferences are passed as flat parameters in update_my_preferences
 
 # =============================================================================
 # Server Tools
@@ -2682,18 +2612,129 @@ async def get_my_preferences(ctx: Context) -> dict[str, Any]:
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def update_my_preferences(
-    preferences: UserPreferences,
-    ctx: Context
+    ctx: Context,
+    albums_defaultAssetOrder: Optional[str] = None,
+    avatar_color: Optional[str] = None,
+    cast_gCastEnabled: Optional[bool] = None,
+    download_archiveSize: Optional[int] = None,
+    download_includeEmbeddedVideos: Optional[bool] = None,
+    emailNotifications_enabled: Optional[bool] = None,
+    emailNotifications_albumInvite: Optional[bool] = None,
+    emailNotifications_albumUpdate: Optional[bool] = None,
+    folders_enabled: Optional[bool] = None,
+    folders_sidebarWeb: Optional[bool] = None,
+    memories_enabled: Optional[bool] = None,
+    memories_duration: Optional[int] = None,
+    people_enabled: Optional[bool] = None,
+    people_sidebarWeb: Optional[bool] = None,
+    people_minimumFaces: Optional[int] = None,
+    purchase_showSupportBadge: Optional[bool] = None,
+    purchase_hideBuyButtonUntil: Optional[str] = None,
+    ratings_enabled: Optional[bool] = None,
+    sharedLinks_enabled: Optional[bool] = None,
+    sharedLinks_sidebarWeb: Optional[bool] = None,
+    tags_enabled: Optional[bool] = None,
+    tags_sidebarWeb: Optional[bool] = None,
 ) -> dict[str, Any]:
     """Update the current user's preferences.
 
+    All parameters are optional — only include the ones you want to change.
+    Parameters are grouped by category using underscore prefixes.
+
     Args:
-        preferences: User preferences object. All top-level categories
-            (albums, avatar, cast, download, emailNotifications, folders,
-            memories, people, purchase, ratings, sharedLinks, tags) are
-            optional — only include the categories you want to update.
+        albums_defaultAssetOrder: Default sort order for album assets. 'asc' or 'desc'.
+        avatar_color: Avatar color. One of: 'primary', 'pink', 'red', 'yellow',
+            'blue', 'green', 'purple', 'orange', 'gray', 'amber'.
+        cast_gCastEnabled: Enable Google Cast support.
+        download_archiveSize: Download archive size limit in bytes.
+        download_includeEmbeddedVideos: Include embedded videos in downloads.
+        emailNotifications_enabled: Enable email notifications.
+        emailNotifications_albumInvite: Notify on album invite.
+        emailNotifications_albumUpdate: Notify on album update.
+        folders_enabled: Enable folder views.
+        folders_sidebarWeb: Show folders in web sidebar.
+        memories_enabled: Enable memories feature.
+        memories_duration: Memory display duration in seconds.
+        people_enabled: Enable people/facial recognition.
+        people_sidebarWeb: Show people in web sidebar.
+        people_minimumFaces: Minimum number of faces to show a person.
+        purchase_showSupportBadge: Show support badge.
+        purchase_hideBuyButtonUntil: Hide purchase button until date. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        ratings_enabled: Enable star ratings.
+        sharedLinks_enabled: Enable shared links.
+        sharedLinks_sidebarWeb: Show shared links in web sidebar.
+        tags_enabled: Enable tags.
+        tags_sidebarWeb: Show tags in web sidebar.
     """
-    payload = preferences.model_dump(exclude_unset=True, exclude_none=True)
+    payload = {}
+    if albums_defaultAssetOrder is not None:
+        payload["albums"] = {"defaultAssetOrder": albums_defaultAssetOrder}
+    if avatar_color is not None:
+        payload["avatar"] = {"color": avatar_color}
+    if cast_gCastEnabled is not None:
+        payload["cast"] = {"gCastEnabled": cast_gCastEnabled}
+    if download_archiveSize is not None or download_includeEmbeddedVideos is not None:
+        d = {}
+        if download_archiveSize is not None:
+            d["archiveSize"] = download_archiveSize
+        if download_includeEmbeddedVideos is not None:
+            d["includeEmbeddedVideos"] = download_includeEmbeddedVideos
+        payload["download"] = d
+    if emailNotifications_enabled is not None or emailNotifications_albumInvite is not None or emailNotifications_albumUpdate is not None:
+        e = {}
+        if emailNotifications_enabled is not None:
+            e["enabled"] = emailNotifications_enabled
+        if emailNotifications_albumInvite is not None:
+            e["albumInvite"] = emailNotifications_albumInvite
+        if emailNotifications_albumUpdate is not None:
+            e["albumUpdate"] = emailNotifications_albumUpdate
+        payload["emailNotifications"] = e
+    if folders_enabled is not None or folders_sidebarWeb is not None:
+        f = {}
+        if folders_enabled is not None:
+            f["enabled"] = folders_enabled
+        if folders_sidebarWeb is not None:
+            f["sidebarWeb"] = folders_sidebarWeb
+        payload["folders"] = f
+    if memories_enabled is not None or memories_duration is not None:
+        m = {}
+        if memories_enabled is not None:
+            m["enabled"] = memories_enabled
+        if memories_duration is not None:
+            m["duration"] = memories_duration
+        payload["memories"] = m
+    if people_enabled is not None or people_sidebarWeb is not None or people_minimumFaces is not None:
+        p = {}
+        if people_enabled is not None:
+            p["enabled"] = people_enabled
+        if people_sidebarWeb is not None:
+            p["sidebarWeb"] = people_sidebarWeb
+        if people_minimumFaces is not None:
+            p["minimumFaces"] = people_minimumFaces
+        payload["people"] = p
+    if purchase_showSupportBadge is not None or purchase_hideBuyButtonUntil is not None:
+        pu = {}
+        if purchase_showSupportBadge is not None:
+            pu["showSupportBadge"] = purchase_showSupportBadge
+        if purchase_hideBuyButtonUntil is not None:
+            pu["hideBuyButtonUntil"] = purchase_hideBuyButtonUntil
+        payload["purchase"] = pu
+    if ratings_enabled is not None:
+        payload["ratings"] = {"enabled": ratings_enabled}
+    if sharedLinks_enabled is not None or sharedLinks_sidebarWeb is not None:
+        sl = {}
+        if sharedLinks_enabled is not None:
+            sl["enabled"] = sharedLinks_enabled
+        if sharedLinks_sidebarWeb is not None:
+            sl["sidebarWeb"] = sharedLinks_sidebarWeb
+        payload["sharedLinks"] = sl
+    if tags_enabled is not None or tags_sidebarWeb is not None:
+        t = {}
+        if tags_enabled is not None:
+            t["enabled"] = tags_enabled
+        if tags_sidebarWeb is not None:
+            t["sidebarWeb"] = tags_sidebarWeb
+        payload["tags"] = t
     return await get_client().update_my_preferences(payload, get_user_token())
 
 @mcp.tool(tags={"read", "primary", "immich"})

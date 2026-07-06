@@ -687,7 +687,7 @@ async def main():
         await run_test(session, "P2 update_my_user", "update_my_user",
             {"name": make_name("UpdatedUser")})
         await run_test(session, "P3 update_my_preferences", "update_my_preferences",
-            {"preferences": {"ratings": {"enabled": True}}})
+            {"ratings_enabled": True})
         await run_test(session, "P4 get_user_profile_image_url", "get_user_profile_image_url",
             {"id": pick_id("my_user_info")})
 

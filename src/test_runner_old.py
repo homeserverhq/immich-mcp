@@ -932,7 +932,7 @@ async def main():
         )
         await run_test(
             session, "P3 update_my_preferences", "update_my_preferences",
-            {"preferences": {"ratings": {"enabled": True}}}
+            {"ratings_enabled": True}
         )
         await run_test(
             session, "P4 get_user_profile_image_url", "get_user_profile_image_url",
