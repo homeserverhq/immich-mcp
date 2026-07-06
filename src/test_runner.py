@@ -31,6 +31,7 @@ _run_id = uuid.uuid4()
 rid = _run_id.hex[:8]
 FAKE_UUID = str(uuid.uuid4())
 ASSET_IDS: list[str] = []
+test_user_id: str = FAKE_UUID
 
 results: list[dict[str, Any]] = []
 store: dict[str, Any] = {}
@@ -409,6 +410,19 @@ async def main():
             log("WARNING: No assets uploaded — asset-dependent tests will use FAKE_UUID")
             ASSET_IDS = [FAKE_UUID]
 
+        # Create dedicated test user for partner and album sharing tests
+        log("Creating test user...")
+        test_user_name = make_name("TestUser")
+        await run_test_with_store(
+            session, "Z0 create_test_user", "create_user",
+            {"email": f"testuser-{rid}@test.local",
+             "password": "TestPass123!", "name": test_user_name},
+            store_key="create_test_user"
+        )
+        global test_user_id
+        test_user_id = pick_id("create_test_user") or FAKE_UUID
+        log(f"Test user ID: {test_user_id}")
+
         # Phase 1: Domain-Specific Tests (parameterless + simple tools)
         log("\n=== Phase 1: Domain-Specific Tests ===")
         store_keys_map = {"get_my_user_info": "get_my_user_info", "get_all_users": "get_all_users"}
@@ -594,34 +608,23 @@ async def main():
             {"id": gid}
         )
 
-        # Phase 3f: Partner Operations (non-standard CRUD)
+        # Phase 3f: Partner Operations (use dedicated test user)
         log("\n=== Phase 3f: Partner Operations ===")
-        second_user_id = owner_id
-        users_data = store.get("get_all_users", {})
-        if isinstance(users_data, dict):
-            items = get_list_items(users_data)
-            for u in items:
-                uid = u.get("id", "")
-                if uid and uid != owner_id:
-                    second_user_id = uid
-                    break
         await run_test(
             session, "C1f create_partner", "create_partner",
-            {"sharedWithId": owner_id}
+            {"sharedWithId": test_user_id}
         )
-        await run_test_with_store(
+        await run_test(
             session, "C2f get_all_partners", "get_all_partners",
-            {"direction": "shared-by"}, store_key="get_partner"
+            {"direction": "shared-by"}
         )
-        partner_id = pick_id("get_partner") or owner_id
-        partner_user = partner_id if partner_id and partner_id != FAKE_UUID else owner_id
         await run_test(
             session, "C3f update_partner", "update_partner",
-            {"id": partner_id, "inTimeline": True}
+            {"id": test_user_id, "inTimeline": True}
         )
         await run_test(
             session, "C4f delete_partner_by_id", "delete_partner_by_id",
-            {"id": partner_id}
+            {"id": test_user_id}
         )
 
         # Phase 4: Activity Tools
@@ -653,7 +656,6 @@ async def main():
 
         # Phase 5: Album Relationship Tools (use album from Phase 4)
         log("\n=== Phase 5: Album Relationship Tools ===")
-        second_uid = second_user_id if second_user_id != owner_id else owner_id
         await run_test(
             session, "E1 get_album_map_markers", "get_album_map_markers",
             {"id": act_album_id}
@@ -672,11 +674,11 @@ async def main():
         )
         await run_test(
             session, "E4 share_album_with_users", "share_album_with_users",
-            {"id": act_album_id, "albumUsers": second_uid}
+            {"id": act_album_id, "albumUsers": test_user_id}
         )
         await run_test(
             session, "E5 remove_user_from_album", "remove_user_from_album",
-            {"id": act_album_id, "userId": second_uid}
+            {"id": act_album_id, "userId": test_user_id}
         )
         # Now clean up activity album
         await run_test(
@@ -971,6 +973,11 @@ async def main():
                 session, "R6 get_people_assets", "get_people_assets",
                 {"personIds": rel_person_id, "page": 1, "size": 10}
             )
+
+        # Clean up test user
+        log("\n=== Cleanup: Delete Test User ===")
+        await run_test(session, "Z9 delete_test_user", "delete_user",
+                       {"id": test_user_id})
 
         # Report Summary
         passed = sum(1 for r in results if r["status"] == "PASSED")

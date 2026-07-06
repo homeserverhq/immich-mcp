@@ -2645,6 +2645,47 @@ async def delete_my_onboarding(ctx: Context) -> dict[str, Any]:
     """Delete the current user's onboarding status."""
     return await get_client().delete_my_onboarding(get_user_token())
 
+@mcp.tool(tags={"write", "advanced", "immich"})
+async def create_user(
+    email: str,
+    password: str,
+    name: str,
+    ctx: Context,
+    storageLabel: Optional[str] = None,
+    quotaSizeInBytes: Optional[int] = None,
+) -> dict[str, Any]:
+    """Create a new user (admin only).
+
+    Args:
+        email: User email address (required).
+        password: User password (required).
+        name: User display name (required).
+        storageLabel: Optional storage label.
+        quotaSizeInBytes: Optional quota in bytes.
+    """
+    payload: dict[str, Any] = {
+        "email": email,
+        "password": password,
+        "name": name,
+    }
+    if storageLabel is not None:
+        payload["storageLabel"] = storageLabel
+    if quotaSizeInBytes is not None:
+        payload["quotaSizeInBytes"] = quotaSizeInBytes
+    return await get_client().create_user(payload, get_user_token())
+
+@mcp.tool(tags={"write", "advanced", "immich"})
+async def delete_user(
+    id: str,
+    ctx: Context,
+) -> dict[str, Any]:
+    """Delete a user by ID (admin only).
+
+    Args:
+        id: The user ID to delete (required).
+    """
+    return await get_client().delete_user(id, get_user_token())
+
 # =============================================================================
 # Entry Point
 # =============================================================================

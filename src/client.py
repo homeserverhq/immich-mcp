@@ -819,3 +819,9 @@ class ImmichClient:
 
     async def delete_profile_image(self, api_key: Optional[str] = None) -> Any:
         return await self.delete("/users/profile-image", api_key)
+
+    async def create_user(self, payload: dict, api_key: Optional[str] = None) -> Any:
+        return await self.post("/admin/users", api_key, json=payload)
+
+    async def delete_user(self, user_id: str, api_key: Optional[str] = None) -> Any:
+        return await self.delete(f"/admin/users/{user_id}", api_key)
