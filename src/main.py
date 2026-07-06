@@ -574,7 +574,7 @@ livePhotoVideoId: Optional[str] = None,
         visibility=visibility, livePhotoVideoId=livePhotoVideoId,
     )
     return await get_client().update_asset(
-        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"write", "advanced", "immich"})
@@ -591,7 +591,7 @@ async def update_asset_edits(
             ('crop', 'rotate', or 'mirror') and corresponding parameters.
     """
     payload = {"edits": [e.model_dump() for e in edits]}
-    return await get_client().update_asset_edits(id, payload, get_user_token())
+    return await get_client().update_asset_edits(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def update_asset_metadata(
@@ -607,7 +607,7 @@ async def update_asset_metadata(
             value (arbitrary JSON object, e.g. {'someField': 'someValue'}).
     """
     payload = {"items": [{"key": i.key, "value": i.value} for i in items]}
-    result = await get_client().update_asset_metadata(id, payload, get_user_token())
+    result = await get_client().update_asset_metadata(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"results": result} if isinstance(result, list) else result
 
 @mcp.tool(tags={"write", "primary", "immich"})
@@ -665,7 +665,7 @@ timeZone: Optional[str] = None,
         visibility=visibility, duplicateId=duplicateId, timeZone=timeZone,
     )
     return await get_client().bulk_update_assets(
-        params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"write", "advanced", "immich"})
@@ -696,7 +696,7 @@ stack: bool = False,
         sharedLinks=sharedLinks, sidecar=sidecar, stack=stack,
     )
     return await get_client().copy_asset(
-        params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"read", "basic", "immich"})
@@ -869,7 +869,7 @@ async def upload_asset(
     return await get_client().upload_asset(
         base64_data, deviceAssetId, deviceId, fileCreatedAt, fileModifiedAt, get_user_token(),
         filename=filename, duration=duration,
-        is_favorite=isFavorite, visibility=visibility,
+        is_favorite=isFavorite, visibility=visibility, include_all_fields=ALLOW_ALL_AGGREGATE,
     )
 
 # =============================================================================
@@ -990,7 +990,7 @@ async def add_assets_to_album(
     """
     id_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"ids": id_list}
-    data = await get_client().add_assets_to_album(id, payload, get_user_token())
+    data = await get_client().add_assets_to_album(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"write", "primary", "immich"})
@@ -1024,7 +1024,7 @@ async def share_album_with_users(
     """
     users_list = [{"userId": u.strip()} for u in albumUsers.split(",") if u.strip()]
     payload = {"albumUsers": users_list}
-    return await get_client().add_users_to_album(id, payload, get_user_token())
+    return await get_client().add_users_to_album(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def remove_user_from_album(
@@ -1156,7 +1156,7 @@ async def upsert_tags(
     """
     tag_list = [t.strip() for t in tags.split(",") if t.strip()]
     payload = {"tags": tag_list}
-    data = await get_client().upsert_tags(payload, get_user_token())
+    data = await get_client().upsert_tags(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"write", "primary", "immich"})
@@ -1329,7 +1329,7 @@ async def merge_people(
     """
     id_list = [i.strip() for i in mergeIds.split(",") if i.strip()]
     payload = {"ids": id_list}
-    data = await get_client().merge_people(id, payload, get_user_token())
+    data = await get_client().merge_people(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"read", "advanced", "immich"})
@@ -1383,7 +1383,7 @@ async def reassign_face(
         personId: The target person ID.
     """
     payload = {"data": [{"assetId": assetId, "personId": personId}]}
-    data = await get_client().reassign_faces(personId, payload, get_user_token())
+    data = await get_client().reassign_faces(personId, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"results": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"write", "advanced", "immich"})
@@ -1597,7 +1597,7 @@ seenAt: str = "",
         payload["showAt"] = _normalize_datetime(showAt)
     if seenAt:
         payload["seenAt"] = _normalize_datetime(seenAt)
-    return await get_client().create_memory(payload, get_user_token())
+    return await get_client().create_memory(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def update_memory(
@@ -1617,7 +1617,7 @@ seenAt: Optional[str] = None,
     """
     params = UpdateMemoryParam(isSaved=isSaved, memoryAt=memoryAt, seenAt=seenAt)
     return await get_client().update_memory(
-        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"write", "advanced", "immich"})
@@ -1646,7 +1646,7 @@ async def add_assets_to_memory(
     """
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"ids": asset_list}
-    data = await get_client().add_assets_to_memory(id, payload, get_user_token())
+    data = await get_client().add_assets_to_memory(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"write", "advanced", "immich"})
@@ -1900,7 +1900,7 @@ async def add_assets_to_shared_link(
     """
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"assetIds": asset_list}
-    data = await get_client().add_assets_to_shared_link(id, payload, get_user_token())
+    data = await get_client().add_assets_to_shared_link(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"write", "primary", "immich"})
@@ -2784,7 +2784,7 @@ async def create_user(
         payload["storageLabel"] = storageLabel
     if quotaSizeInBytes is not None:
         payload["quotaSizeInBytes"] = quotaSizeInBytes
-    return await get_client().create_user(payload, get_user_token())
+    return await get_client().create_user(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def delete_user(
