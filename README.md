@@ -2,7 +2,7 @@
 
 This repository contains a Model Context Protocol (MCP) server that acts
 as a secure, multi-tenant proxy between an AI Assistant and the Immich
-backend API. It exposes **128 MCP tools** covering 16 resource domains
+backend API. It exposes **130 MCP tools** covering 16 resource domains
 with full CRUD, search, timeline, map, and relationship management.
 
 ## ✨ Features
@@ -13,14 +13,14 @@ with full CRUD, search, timeline, map, and relationship management.
 - **👥 Multi-Tenancy** — Uses Python `contextvars` to maintain thread-safe
   user identity isolation, ensuring all AI-driven actions are scoped to
   the authenticated user's permissions.
-- **📊 Full Immich Coverage** — 128 tools mapped to Immich API endpoints
+- **📊 Full Immich Coverage** — 130 tools mapped to Immich API endpoints
   across 16 resource domains.
 - **⚡ TOON Optimization** — Bulk list responses are automatically compressed
   using TOON (Token-Optimized Object Notation) to reduce token consumption
   and maximize context window efficiency.
 - **🚀 Efficient Gets** — GET responses return only commonly used fields by
   default. Full objects are available via an `include_all_fields` flag.
-- **🧪 Comprehensive Testing** — 147 automated tests covering all tool
+- **🧪 Comprehensive Testing** — 153 automated tests covering all tool
   domains, run via the test runner pipeline.
 
 ## 🔧 Environment Variables
@@ -78,18 +78,18 @@ The MCP server serves at `http://immich-mcp:80/mcp` (Streamable HTTP).
 
 ## 🛠️ API Tool Mapping
 
-The server implements 128 MCP tools organized into the following categories:
+The server implements 130 MCP tools organized into the following categories:
 
 ### 🖼️ Asset Management (21 tools)
 
-- `get_all_assets` — List all assets with pagination and filters
+- `list_all_assets` — List every photo, video, and audio file in the library
 - `get_asset_by_id` — Get a single asset by ID
 - `get_asset_statistics` — Get asset statistics
 - `get_asset_exif` — Get EXIF data for an asset
-- `get_asset_ocr` — Get OCR data for an asset
-- `get_asset_metadata` — Get metadata for an asset
+- `list_asset_ocr` — Get OCR data for an asset
+- `list_asset_metadata` — Get metadata for an asset
 - `get_asset_metadata_by_key` — Get a specific metadata key
-- `get_asset_edits` — Get edit history
+- `list_asset_edits` — Get edit history
 - `get_asset_thumbnail_url` — Get thumbnail URL
 - `get_asset_original_url` — Get original file URL
 - `get_asset_video_url` — Get video playback URL
@@ -100,13 +100,13 @@ The server implements 128 MCP tools organized into the following categories:
 - `bulk_update_assets` — Update multiple assets
 - `copy_asset` — Copy asset metadata
 - `upload_asset` — Upload an asset from base64 data
-- `get_assets_by_tag` — Get all assets that have a specific tag
-- `get_album_assets` — Get all assets in an album
-- `get_memory_assets` — Get all assets in a memory
+- `list_assets_by_tag` — Get all assets that have a specific tag
+- `list_assets_by_album` — Get all assets in an album
+- `list_assets_by_memory` — Get all assets in a memory
 
-### 💿 Album Management (12 tools)
+### 💿 Album Management (11 tools)
 
-- `get_all_albums` — List all albums
+- `list_all_albums` — List all albums
 - `get_album_by_id` — Get a single album
 - `create_album` — Create a new album
 - `update_album` — Update an album
@@ -116,11 +116,11 @@ The server implements 128 MCP tools organized into the following categories:
 - `share_album_with_users` — Share album with users
 - `remove_user_from_album` — Remove user from album
 - `get_album_statistics` — Get album statistics
-- `get_album_map_markers` — Get album map markers
+- `list_album_map_markers` — Get album map markers
 
-### 🏷️ Tag Management (10 tools)
+### 🏷️ Tag Management (9 tools)
 
-- `get_all_tags` — List all tags
+- `list_all_tags` — List all tags
 - `get_tag_by_id` — Get a single tag
 - `create_tag` — Create a tag
 - `update_tag` — Update a tag
@@ -132,7 +132,7 @@ The server implements 128 MCP tools organized into the following categories:
 
 ### 👤 People & Faces (12 tools)
 
-- `get_all_people` — List all people
+- `list_all_people` — List all people
 - `get_person_by_id` — Get a single person
 - `create_person` — Create a person
 - `update_person` — Update a person
@@ -140,14 +140,14 @@ The server implements 128 MCP tools organized into the following categories:
 - `merge_people` — Merge people
 - `get_person_statistics` — Get person statistics
 - `get_person_thumbnail_url` — Get person thumbnail URL
-- `get_faces_by_asset` — Get faces for an asset
+- `list_faces_by_asset` — Get faces for an asset
 - `reassign_face` — Reassign a face to a different person
 - `delete_face` — Delete a face
-- `get_people_assets` — List assets for specific people
+- `list_assets_by_people` — List assets for specific people
 
 ### 📚 Library Management (7 tools)
 
-- `get_all_libraries` — List all libraries
+- `list_all_libraries` — List all libraries
 - `get_library_by_id` — Get a single library
 - `create_library` — Create a library
 - `update_library` — Update a library
@@ -155,9 +155,9 @@ The server implements 128 MCP tools organized into the following categories:
 - `scan_library` — Scan a library
 - `get_library_statistics` — Get library statistics
 
-### 💭 Memory Management (9 tools)
+### 💭 Memory Management (8 tools)
 
-- `get_all_memories` — List all memories
+- `list_all_memories` — List all memories
 - `get_memory_by_id` — Get a single memory
 - `create_memory` — Create a memory
 - `update_memory` — Update a memory
@@ -168,7 +168,7 @@ The server implements 128 MCP tools organized into the following categories:
 
 ### 🗃️ Stack Management (6 tools)
 
-- `get_all_stacks` — List all stacks
+- `list_all_stacks` — List all stacks
 - `get_stack_by_id` — Get a single stack
 - `create_stack` — Create a stack
 - `update_stack` — Update a stack
@@ -177,7 +177,7 @@ The server implements 128 MCP tools organized into the following categories:
 
 ### 🔗 Shared Link Management (7 tools)
 
-- `get_all_shared_links` — List all shared links
+- `list_all_shared_links` — List all shared links
 - `get_shared_link_by_id` — Get a shared link
 - `create_shared_link` — Create a shared link
 - `update_shared_link` — Update a shared link
@@ -187,14 +187,14 @@ The server implements 128 MCP tools organized into the following categories:
 
 ### 📋 Activity Management (4 tools)
 
-- `get_all_activities` — List activities
+- `list_all_activities` — List activities
 - `get_activity_statistics` — Get activity statistics
 - `create_activity` — Create an activity
 - `delete_activity_by_id` — Delete an activity
 
 ### 🤝 Partner Management (4 tools)
 
-- `get_all_partners` — List partners
+- `list_all_partners` — List partners
 - `create_partner` — Add a partner
 - `update_partner` — Update partner visibility
 - `delete_partner_by_id` — Remove a partner
@@ -210,7 +210,7 @@ The server implements 128 MCP tools organized into the following categories:
 - `get_server_storage` — Get storage information
 - `get_server_media_types` — Get supported media types
 - `get_server_version_check` — Get version check status
-- `get_server_version_history` — Get version history
+- `list_server_version_history` — Get version history
 - `get_server_apk_links` — Get APK download links
 
 ### 🔍 Search (8 tools)
@@ -226,14 +226,14 @@ The server implements 128 MCP tools organized into the following categories:
 
 ### 🗺️  Timeline & Map (4 tools)
 
-- `get_time_buckets` — Get timeline buckets
-- `get_time_bucket` — Get assets in a bucket
-- `get_map_markers` — Get geolocation markers
+- `list_time_buckets` — Get timeline buckets
+- `list_time_bucket_assets` — Get assets in a time bucket
+- `list_map_markers` — Get geolocation markers
 - `reverse_geocode` — Reverse geocode coordinates
 
 ### 🔄 Duplicates & Trash (5 tools)
 
-- `get_all_duplicates` — List duplicate groups
+- `list_all_duplicates` — List duplicate groups
 - `dismiss_duplicate_group` — Dismiss a duplicate group
 - `empty_trash` — Empty trash
 - `restore_trash` — Restore all trashed assets
@@ -245,9 +245,9 @@ The server implements 128 MCP tools organized into the following categories:
 - `get_system_config_defaults` — Get configuration defaults
 - `get_storage_template_options` — Get storage template options
 
-### 👥 User & Account (8 tools)
+### 👥 User & Account (10 tools)
 
-- `get_all_users` — List all users
+- `list_all_users` — List all users
 - `get_user_by_id` — Get a user by ID
 - `get_my_user_info` — Get current user info
 - `update_my_user` — Update current user
@@ -255,3 +255,5 @@ The server implements 128 MCP tools organized into the following categories:
 - `update_my_preferences` — Update preferences
 - `get_user_profile_image_url` — Get profile image URL
 - `delete_my_onboarding` — Reset onboarding
+- `create_user` — Create a new user
+- `delete_user` — Delete a user
