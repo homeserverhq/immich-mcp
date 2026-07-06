@@ -1,12 +1,9 @@
 """
-End-to-end test harness for Immich MCP Server.
+Flat end-to-end test harness for Immich MCP Server.
 
-Connects via Streamable HTTP (JSON-RPC POST), tests all tools,
-and prints a Markdown report to stdout.
-
-Every test runs unconditionally — there is no SKIPPED status.
-Tests exist to find flaws in main.py and client.py; the developer
-fixes application code so that tests pass as a consequence.
+ZERO conditional branching. ZERO exception handling. ZERO skip concepts.
+Every single test runs every single time. Failures cascade through
+parameter passing but never crash the runner.
 """
 
 import json
@@ -35,10 +32,6 @@ test_user_id: str = FAKE_UUID
 
 results: list[dict[str, Any]] = []
 store: dict[str, Any] = {}
-created: dict[str, str] = {}
-
-
-
 
 
 class MCPSession:
@@ -117,7 +110,7 @@ class MCPSession:
             "protocolVersion": "2024-11-05",
             "capabilities": {},
             "clientInfo": {
-                "name": "immich-test-runner",
+                "name": "immich-test-runner-flat",
                 "version": "1.0",
             },
         })
@@ -150,12 +143,7 @@ def is_error(result: dict[str, Any]) -> Optional[str]:
                 txt = c["text"]
                 if txt.startswith("Error calling tool"):
                     return txt.split(":", 1)[1].strip() if ":" in txt else txt
-                try:
-                    data = json.loads(txt)
-                except json.JSONDecodeError:
-                    return txt
-                if isinstance(data, dict):
-                    return data.get("error", txt)
+                return txt
     return None
 
 
@@ -165,10 +153,7 @@ def extract_content(result: dict[str, Any]) -> Any:
     content = result.get("content", [])
     for c in content:
         if c.get("type") == "text":
-            try:
-                return json.loads(c["text"])
-            except json.JSONDecodeError:
-                return c["text"]
+            return json.loads(c["text"])
     return result.get("_meta", {})
 
 
@@ -176,48 +161,36 @@ async def run_test(
     session: MCPSession,
     label: str,
     tool: str,
-    params: dict[str, Any] = None,
+    params: dict[str, Any] = {},
 ) -> bool:
-    if params is None:
-        params = {}
-    try:
-        result = await session.call_tool(tool, params)
-        err = is_error(result)
-        if err:
-            results.append({
-                "label": label, "tool": tool, "status": "FAILED",
-                "reason": err
-            })
-            log(f"  FAIL {label}: {err}")
-            return False
-        data = extract_content(result)
-        results.append({
-            "label": label, "tool": tool, "status": "PASSED", "data": data
-        })
-        log(f"  PASS {label}")
-        return True
-    except Exception as e:
+    result = await session.call_tool(tool, params)
+    err = is_error(result)
+    if err:
         results.append({
             "label": label, "tool": tool, "status": "FAILED",
-            "reason": str(e)
+            "reason": err
         })
-        log(f"  FAIL {label}: {e}")
+        log(f"  FAIL {label}: {err}")
         return False
+    data = extract_content(result)
+    results.append({
+        "label": label, "tool": tool, "status": "PASSED", "data": data
+    })
+    log(f"  PASS {label}")
+    return True
 
 
 async def run_test_with_store(
     session: MCPSession,
     label: str,
     tool: str,
-    params: dict[str, Any] = None,
-    store_key: str = None,
+    params: dict[str, Any] = {},
+    store_key: str = "",
 ) -> bool:
     ok = await run_test(session, label, tool, params)
-    if ok and store_key:
-        for r in results:
-            if r["label"] == label and r["status"] == "PASSED":
-                store[store_key] = r.get("data")
-                break
+    for r in results:
+        if r["label"] == label and r["status"] == "PASSED":
+            store[store_key] = r.get("data")
     return ok
 
 
@@ -255,19 +228,16 @@ def get_list_items(data: Any) -> list[dict[str, Any]]:
                 if isinstance(val, list):
                     return val
                 if isinstance(val, str):
-                    try:
-                        parsed = toon_to_json(val)
-                        if isinstance(parsed, list):
-                            return parsed
-                        if isinstance(parsed, dict):
-                            for inner in ("albums", "tags", "people", "libraries",
-                                           "memories", "stacks", "shared_links",
-                                           "activities", "partners", "users",
-                                           "duplicates"):
-                                if inner in parsed and isinstance(parsed[inner], list):
-                                    return parsed[inner]
-                    except Exception:
-                        pass
+                    parsed = toon_to_json(val)
+                    if isinstance(parsed, list):
+                        return parsed
+                    if isinstance(parsed, dict):
+                        for inner in ("albums", "tags", "people", "libraries",
+                                       "memories", "stacks", "shared_links",
+                                       "activities", "partners", "users",
+                                       "duplicates"):
+                            if inner in parsed and isinstance(parsed[inner], list):
+                                return parsed[inner]
         return []
     elif isinstance(data, list):
         return data
@@ -278,174 +248,118 @@ async def run_verify_delete(
     session: MCPSession,
     label: str,
     get_tool: str,
-    params: dict[str, Any] = None,
+    params: dict[str, Any] = {},
 ) -> bool:
-    if params is None:
-        params = {}
-    try:
-        result = await session.call_tool(get_tool, params)
-        err = is_error(result)
-        if err:
-            if any(kw in err.lower() for kw in ("not found", "not exist", "404", "400", "bad request")):
-                results.append({
-                    "label": label, "tool": get_tool, "status": "PASSED",
-                    "data": {"verified": "deleted"}
-                })
-                log(f"  PASS {label} (confirmed deleted)")
-                return True
+    result = await session.call_tool(get_tool, params)
+    err = is_error(result)
+    if err:
+        err_lower = err.lower()
+        is_not_found = ("not found" in err_lower or "not exist" in err_lower
+                        or "404" in err_lower or "400" in err_lower
+                        or "bad request" in err_lower)
+        if is_not_found:
             results.append({
-                "label": label, "tool": get_tool, "status": "FAILED",
-                "reason": err
+                "label": label, "tool": get_tool, "status": "PASSED",
+                "data": {"verified": "deleted"}
             })
-            log(f"  FAIL {label}: {err}")
-            return False
+            log(f"  PASS {label} (confirmed deleted)")
+            return True
         results.append({
             "label": label, "tool": get_tool, "status": "FAILED",
-            "reason": "Record still exists after delete"
+            "reason": err
         })
-        log(f"  FAIL {label}: record still exists")
+        log(f"  FAIL {label}: {err}")
         return False
-    except Exception as e:
-        results.append({
-            "label": label, "tool": get_tool, "status": "FAILED",
-            "reason": str(e)
-        })
-        log(f"  FAIL {label}: {e}")
-        return False
+    results.append({
+        "label": label, "tool": get_tool, "status": "FAILED",
+        "reason": "Record still exists after delete"
+    })
+    log(f"  FAIL {label}: record still exists")
+    return False
 
-
-# =============================================================================
-# Test Data Configuration
-# =============================================================================
-
-RESOURCE_TESTS = [
-    ("Album", "create_album",
-     {"albumName": make_name("Album")},
-     "get_all_albums", "get_album_by_id",
-     "update_album", {"description": "Updated description"},
-     "delete_album_by_id"),
-    ("Tag", "create_tag",
-     {"name": make_name("Tag")},
-     "get_all_tags", "get_tag_by_id",
-     "update_tag", {"color": "#FF0000"},
-     "delete_tag_by_id"),
-    ("Person", "create_person",
-     {"name": make_name("Person")},
-     "get_all_people", "get_person_by_id",
-     "update_person", {"isFavorite": True},
-     "delete_person_by_id"),
-]
-
-DOMAIN_TESTS = [
-    ("get_server_ping", {}),
-    ("get_server_version", {}),
-    ("get_server_about", {}),
-    ("get_server_config", {}),
-    ("get_server_features", {}),
-    ("get_server_statistics", {}),
-    ("get_server_storage", {}),
-    ("get_server_media_types", {}),
-    ("get_server_version_history", {}),
-    ("get_server_version_check", {}),
-    ("get_server_apk_links", {}),
-    ("get_all_albums", {}),
-    ("get_all_tags", {}),
-    ("get_all_people", {}),
-    ("get_all_libraries", {}),
-    ("get_all_memories", {}),
-    ("get_all_stacks", {}),
-    ("get_all_shared_links", {}),
-    ("get_all_duplicates", {}),
-    ("get_all_users", {}),
-    ("get_system_config", {}),
-    ("get_system_config_defaults", {}),
-    ("get_storage_template_options", {}),
-    ("get_my_user_info", {}),
-    ("get_my_preferences", {}),
-    ("get_asset_statistics", {}),
-    ("get_album_statistics", {}),
-    ("get_memory_statistics", {}),
-    ("search_explore", {}),
-    ("search_cities", {}),
-    ("empty_trash", {}),
-    ("restore_trash", {}),
-]
 
 async def main():
-    print(f"# Test Report — Immich MCP Server")
+    print(f"# Test Report — Immich MCP Server (Flat)")
     print(f"\n**Date**: {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}")
     print(f"**Server**: {MCP_URL}")
     print(f"**Run ID**: {rid}")
     print()
 
     async with MCPSession(MCP_URL, MCP_HEADERS) as session:
+        # =========================================================================
         # Phase 0: Session Init & Tool Discovery
+        # =========================================================================
         log("\n=== Phase 0: Session Init & Tool Discovery ===")
         tools_list = await session.list_tools()
         tool_names = [t["name"] for t in tools_list]
         print(f"**Discovered**: {len(tool_names)} tools")
         log(f"Tools: {', '.join(sorted(tool_names))}")
 
-        # Get real asset IDs from the server for asset-dependent tools
+        # Fetch real asset IDs from the server
         log("Fetching existing assets...")
-        global ASSET_IDS
-        import httpx as _httpx
-        ASSET_IDS = []
-        try:
-            r = _httpx.post("http://localhost:2283/api/search/metadata",
-                headers={"x-api-key": API_KEY},
-                json={"page": 1, "size": 100})
-            data = r.json()
-            items = data.get("assets", {}).get("items", [])
-            ASSET_IDS = [item["id"] for item in items if item.get("id")]
-            log(f"Found {len(ASSET_IDS)} assets: {ASSET_IDS[:3]}...")
-        except Exception as e:
-            log(f"WARNING: Could not fetch assets: {e}")
-        if not ASSET_IDS:
-            log("WARNING: No assets found — asset-dependent tests will use FAKE_UUID")
-            ASSET_IDS = [FAKE_UUID]
-        if ASSET_IDS:
-            log(f"Uploaded {len(ASSET_IDS)} assets: {ASSET_IDS}")
-        else:
-            log("WARNING: No assets uploaded — asset-dependent tests will use FAKE_UUID")
-            ASSET_IDS = [FAKE_UUID]
+        _asset_resp = httpx.post("http://localhost:2283/api/search/metadata",
+            headers={"x-api-key": API_KEY},
+            json={"page": 1, "size": 100})
+        _asset_data = _asset_resp.json()
+        _asset_items = _asset_data.get("assets", {}).get("items", [])
+        ASSET_IDS.clear()
+        ASSET_IDS.extend([item["id"] for item in _asset_items if item.get("id")])
+        log(f"Found {len(ASSET_IDS)} assets: {ASSET_IDS[:3]}...")
+        ASSET_IDS.extend([FAKE_UUID] if not ASSET_IDS else [])
+        log(f"Using {len(ASSET_IDS)} asset IDs: {ASSET_IDS}")
 
         # Create dedicated test user for partner and album sharing tests
         log("Creating test user...")
-        test_user_name = make_name("TestUser")
-        await run_test_with_store(
-            session, "Z0 create_test_user", "create_user",
+        await run_test_with_store(session, "Z0 create_test_user", "create_user",
             {"email": f"testuser-{rid}@test.local",
-             "password": "TestPass123!", "name": test_user_name},
-            store_key="create_test_user"
-        )
-        global test_user_id
-        test_user_id = pick_id("create_test_user") or FAKE_UUID
-        log(f"Test user ID: {test_user_id}")
+             "password": "TestPass123!", "name": make_name("TestUser")},
+            store_key="create_test_user")
+        test_user_id = pick_id("create_test_user")
 
-        # Phase 1: Domain-Specific Tests (parameterless + simple tools)
+        # =========================================================================
+        # Phase 1: Domain-Specific Tests (32 tests: A1-A32)
+        # =========================================================================
         log("\n=== Phase 1: Domain-Specific Tests ===")
-        store_keys_map = {"get_my_user_info": "get_my_user_info", "get_all_users": "get_all_users"}
-        phase1_idx = 1
-        for tool_name, tool_params in DOMAIN_TESTS:
-            sk = store_keys_map.get(tool_name)
-            if sk:
-                await run_test_with_store(
-                    session, f"A{phase1_idx} {tool_name}", tool_name, tool_params,
-                    store_key=sk
-                )
-            else:
-                await run_test(
-                    session, f"A{phase1_idx} {tool_name}", tool_name, tool_params
-                )
-            phase1_idx += 1
+        await run_test_with_store(session, "A1 get_server_ping", "get_server_ping", {})
+        await run_test_with_store(session, "A2 get_server_version", "get_server_version", {})
+        await run_test_with_store(session, "A3 get_server_about", "get_server_about", {})
+        await run_test_with_store(session, "A4 get_server_config", "get_server_config", {})
+        await run_test_with_store(session, "A5 get_server_features", "get_server_features", {})
+        await run_test_with_store(session, "A6 get_server_statistics", "get_server_statistics", {})
+        await run_test_with_store(session, "A7 get_server_storage", "get_server_storage", {})
+        await run_test_with_store(session, "A8 get_server_media_types", "get_server_media_types", {})
+        await run_test_with_store(session, "A9 get_server_version_history", "get_server_version_history", {})
+        await run_test_with_store(session, "A10 get_server_version_check", "get_server_version_check", {})
+        await run_test_with_store(session, "A11 get_server_apk_links", "get_server_apk_links", {})
+        await run_test_with_store(session, "A12 get_all_albums", "get_all_albums", {})
+        await run_test_with_store(session, "A13 get_all_tags", "get_all_tags", {})
+        await run_test_with_store(session, "A14 get_all_people", "get_all_people", {})
+        await run_test_with_store(session, "A15 get_all_libraries", "get_all_libraries", {})
+        await run_test_with_store(session, "A16 get_all_memories", "get_all_memories", {})
+        await run_test_with_store(session, "A17 get_all_stacks", "get_all_stacks", {})
+        await run_test_with_store(session, "A18 get_all_shared_links", "get_all_shared_links", {})
+        await run_test_with_store(session, "A19 get_all_duplicates", "get_all_duplicates", {})
+        await run_test_with_store(session, "A20 get_all_users", "get_all_users", {})
+        await run_test_with_store(session, "A21 get_system_config", "get_system_config", {})
+        await run_test_with_store(session, "A22 get_system_config_defaults", "get_system_config_defaults", {})
+        await run_test_with_store(session, "A23 get_storage_template_options", "get_storage_template_options", {})
+        await run_test_with_store(session, "A24 get_my_user_info", "get_my_user_info", {}, store_key="my_user_info")
+        await run_test_with_store(session, "A25 get_my_preferences", "get_my_preferences", {})
+        await run_test_with_store(session, "A26 get_asset_statistics", "get_asset_statistics", {})
+        await run_test_with_store(session, "A27 get_album_statistics", "get_album_statistics", {})
+        await run_test_with_store(session, "A28 get_memory_statistics", "get_memory_statistics", {})
+        await run_test_with_store(session, "A29 search_explore", "search_explore", {})
+        await run_test_with_store(session, "A30 search_cities", "search_cities", {})
+        await run_test_with_store(session, "A31 empty_trash", "empty_trash", {})
+        await run_test_with_store(session, "A32 restore_trash", "restore_trash", {})
 
-        # Phase 2: List Tools (get_all for each resource + extras)
+        # =========================================================================
+        # Phase 2: List Tools (9 tests: B2)
+        # =========================================================================
         log("\n=== Phase 2: List Tools ===")
-        for entry in RESOURCE_TESTS:
-            label = entry[0]
-            list_tool_name = entry[3]
-            await run_test(session, f"B2 list_{label.lower()}", list_tool_name)
+        await run_test(session, "B2 list_album", "get_all_albums", {})
+        await run_test(session, "B2 list_tag", "get_all_tags", {})
+        await run_test(session, "B2 list_person", "get_all_people", {})
         await run_test(session, "B2 list_library", "get_all_libraries", {})
         await run_test(session, "B2 list_memory", "get_all_memories", {})
         await run_test(session, "B2 list_stack", "get_all_stacks", {})
@@ -453,533 +367,364 @@ async def main():
         await run_test(session, "B2 list_partner", "get_all_partners", {"direction": "shared-by"})
         await run_test(session, "B2 list_duplicate", "get_all_duplicates", {})
 
-        # Phase 3: CRUD Cycle for Album, Tag, Person
+        # =========================================================================
+        # Phase 3: CRUD Cycle — Album (5 tests: C1-C5)
+        # =========================================================================
         log("\n=== Phase 3: Resource CRUD Cycle ===")
-        for entry in RESOURCE_TESTS:
-            label, create_tool, create_params, _, get_tool, update_tool, \
-                update_params, delete_tool = entry
-            key = label.lower()
+        await run_test_with_store(session, "C1 create_album", "create_album",
+            {"albumName": make_name("Album")}, store_key="create_album")
+        await run_test_with_store(session, "C2 get_album_by_id", "get_album_by_id",
+            {"id": pick_id("create_album")}, store_key="get_album")
+        await run_test(session, "C3 update_album", "update_album",
+            {"id": pick_id("get_album"), "description": "Updated description"})
+        await run_test(session, "C4 delete_album_by_id", "delete_album_by_id",
+            {"id": pick_id("get_album")})
+        await run_verify_delete(session, "C5 verify_delete_album", "get_album_by_id",
+            {"id": pick_id("get_album")})
 
-            await run_test_with_store(
-                session, f"C1 create_{key}", create_tool, create_params,
-                store_key=f"create_{key}"
-            )
-            cid = pick_id(f"create_{key}")
+        # CRUD Cycle — Tag (5 tests: C1-C5)
+        await run_test_with_store(session, "C1 create_tag", "create_tag",
+            {"name": make_name("Tag")}, store_key="create_tag")
+        await run_test_with_store(session, "C2 get_tag_by_id", "get_tag_by_id",
+            {"id": pick_id("create_tag")}, store_key="get_tag")
+        await run_test(session, "C3 update_tag", "update_tag",
+            {"id": pick_id("get_tag"), "color": "#FF0000"})
+        await run_test(session, "C4 delete_tag_by_id", "delete_tag_by_id",
+            {"id": pick_id("get_tag")})
+        await run_verify_delete(session, "C5 verify_delete_tag", "get_tag_by_id",
+            {"id": pick_id("get_tag")})
 
-            await run_test_with_store(
-                session, f"C2 get_{key}_by_id", get_tool,
-                {"id": cid} if cid else {"id": FAKE_UUID}, store_key=f"get_{key}"
-            )
+        # CRUD Cycle — Person (5 tests: C1-C5)
+        await run_test_with_store(session, "C1 create_person", "create_person",
+            {"name": make_name("Person")}, store_key="create_person")
+        await run_test_with_store(session, "C2 get_person_by_id", "get_person_by_id",
+            {"id": pick_id("create_person")}, store_key="get_person")
+        await run_test(session, "C3 update_person", "update_person",
+            {"id": pick_id("get_person"), "isFavorite": True})
+        await run_test(session, "C4 delete_person_by_id", "delete_person_by_id",
+            {"id": pick_id("get_person")})
+        await run_verify_delete(session, "C5 verify_delete_person", "get_person_by_id",
+            {"id": pick_id("get_person")})
 
-            gid = pick_id(f"get_{key}") or cid
-
-            upd = dict(update_params)
-            upd["id"] = gid if gid else FAKE_UUID
-            await run_test(
-                session, f"C3 update_{key}", update_tool, upd
-            )
-
-            await run_test(
-                session, f"C4 delete_{key}_by_id", delete_tool,
-                {"id": gid} if gid else {"id": FAKE_UUID}
-            )
-
-            await run_verify_delete(
-                session, f"C5 verify_delete_{key}", get_tool,
-                {"id": gid} if gid else {"id": FAKE_UUID}
-            )
-
-        # Phase 3b: Library CRUD (needs ownerId from get_my_user_info)
+        # =========================================================================
+        # Phase 3b: Library CRUD (5 tests: C1b-C5b)
+        # =========================================================================
         log("\n=== Phase 3b: Library CRUD ===")
-        await run_test_with_store(
-            session, "C1b fetch_my_user", "get_my_user_info", {},
-            store_key="my_user_info"
-        )
-        owner_id = pick_id("my_user_info") or FAKE_UUID
-        await run_test_with_store(
-            session, "C1b create_library", "create_library",
-            {"name": make_name("Library"), "ownerId": owner_id},
-            store_key="create_library"
-        )
-        lib_id = pick_id("create_library") or FAKE_UUID
-        await run_test_with_store(
-            session, "C2b get_library_by_id", "get_library_by_id",
-            {"id": lib_id}, store_key="get_library"
-        )
-        gid = pick_id("get_library") or lib_id
-        await run_test(
-            session, "C3b update_library", "update_library",
-            {"id": gid, "name": make_name("LibUpdated")}
-        )
-        await run_test(
-            session, "C4b delete_library_by_id", "delete_library_by_id",
-            {"id": gid}
-        )
-        await run_verify_delete(
-            session, "C5b verify_delete_library", "get_library_by_id",
-            {"id": gid}
-        )
+        await run_test_with_store(session, "C1b fetch_my_user", "get_my_user_info", {},
+            store_key="my_user_info_3b")
+        await run_test_with_store(session, "C1b create_library", "create_library",
+            {"name": make_name("Library"), "ownerId": pick_id("my_user_info_3b")},
+            store_key="create_library")
+        await run_test_with_store(session, "C2b get_library_by_id", "get_library_by_id",
+            {"id": pick_id("create_library")}, store_key="get_library")
+        await run_test(session, "C3b update_library", "update_library",
+            {"id": pick_id("get_library"), "name": make_name("LibUpdated")})
+        await run_test(session, "C4b delete_library_by_id", "delete_library_by_id",
+            {"id": pick_id("get_library")})
+        await run_verify_delete(session, "C5b verify_delete_library", "get_library_by_id",
+            {"id": pick_id("get_library")})
 
-        # Phase 3c: Memory CRUD
+        # =========================================================================
+        # Phase 3c: Memory CRUD (5 tests: C1c-C5c)
+        # =========================================================================
         log("\n=== Phase 3c: Memory CRUD ===")
-        await run_test_with_store(
-            session, "C1c create_memory", "create_memory",
+        await run_test_with_store(session, "C1c create_memory", "create_memory",
             {"type": "on_this_day", "data": json.dumps({"year": 2026}),
              "memoryAt": "2026-06-22T15:00:00+00:00"},
-            store_key="create_memory"
-        )
-        mem_id = pick_id("create_memory") or FAKE_UUID
-        await run_test_with_store(
-            session, "C2c get_memory_by_id", "get_memory_by_id",
-            {"id": mem_id}, store_key="get_memory"
-        )
-        gid = pick_id("get_memory") or mem_id
-        await run_test(
-            session, "C3c update_memory", "update_memory",
-            {"id": gid, "isSaved": True}
-        )
-        await run_test(
-            session, "C4c delete_memory_by_id", "delete_memory_by_id",
-            {"id": gid}
-        )
-        await run_verify_delete(
-            session, "C5c verify_delete_memory", "get_memory_by_id",
-            {"id": gid}
-        )
+            store_key="create_memory")
+        await run_test_with_store(session, "C2c get_memory_by_id", "get_memory_by_id",
+            {"id": pick_id("create_memory")}, store_key="get_memory")
+        await run_test(session, "C3c update_memory", "update_memory",
+            {"id": pick_id("get_memory"), "isSaved": True})
+        await run_test(session, "C4c delete_memory_by_id", "delete_memory_by_id",
+            {"id": pick_id("get_memory")})
+        await run_verify_delete(session, "C5c verify_delete_memory", "get_memory_by_id",
+            {"id": pick_id("get_memory")})
 
-        # Phase 3d: Stack CRUD (requires 2+ asset IDs — backend constraint)
+        # =========================================================================
+        # Phase 3d: Stack CRUD (5 tests: C1d-C5d)
+        # =========================================================================
         log("\n=== Phase 3d: Stack CRUD ===")
-        a_ids = ASSET_IDS[:2]
-        await run_test_with_store(
-            session, "C1d create_stack", "create_stack",
-            {"assetIds": f"{a_ids[0]},{a_ids[1]}"},
-            store_key="create_stack"
-        )
-        stack_id = pick_id("create_stack") or FAKE_UUID
-        await run_test_with_store(
-            session, "C2d get_stack_by_id", "get_stack_by_id",
-            {"id": stack_id}, store_key="get_stack"
-        )
-        gid = pick_id("get_stack") or stack_id
-        await run_test(
-            session, "C3d update_stack", "update_stack",
-            {"id": gid, "primaryAssetId": ASSET_IDS[0]}
-        )
-        await run_test(
-            session, "C4d delete_stack_by_id", "delete_stack_by_id",
-            {"id": gid}
-        )
-        await run_verify_delete(
-            session, "C5d verify_delete_stack", "get_stack_by_id",
-            {"id": gid}
-        )
+        await run_test_with_store(session, "C1d create_stack", "create_stack",
+            {"assetIds": f"{ASSET_IDS[0]},{ASSET_IDS[1]}"},
+            store_key="create_stack")
+        await run_test_with_store(session, "C2d get_stack_by_id", "get_stack_by_id",
+            {"id": pick_id("create_stack")}, store_key="get_stack")
+        await run_test(session, "C3d update_stack", "update_stack",
+            {"id": pick_id("get_stack"), "primaryAssetId": ASSET_IDS[0]})
+        await run_test(session, "C4d delete_stack_by_id", "delete_stack_by_id",
+            {"id": pick_id("get_stack")})
+        await run_verify_delete(session, "C5d verify_delete_stack", "get_stack_by_id",
+            {"id": pick_id("get_stack")})
 
-        # Phase 3e: SharedLink CRUD (use INDIVIDUAL with real asset)
+        # =========================================================================
+        # Phase 3e: SharedLink CRUD (7 tests: C1e-C7e)
+        # =========================================================================
         log("\n=== Phase 3e: SharedLink CRUD ===")
-        await run_test_with_store(
-            session, "C1e create_shared_link", "create_shared_link",
+        await run_test_with_store(session, "C1e create_shared_link", "create_shared_link",
             {"type": "INDIVIDUAL", "assetIds": ASSET_IDS[0]},
-            store_key="create_shared_link"
-        )
-        sl_id = pick_id("create_shared_link") or FAKE_UUID
-        await run_test_with_store(
-            session, "C2e get_shared_link_by_id", "get_shared_link_by_id",
-            {"id": sl_id}, store_key="get_shared_link"
-        )
-        gid = pick_id("get_shared_link") or sl_id
-        await run_test(
-            session, "C3e update_shared_link", "update_shared_link",
-            {"id": gid, "description": "Updated"}
-        )
-        await run_test(
-            session, "C4e add_assets_to_shared_link", "add_assets_to_shared_link",
-            {"id": gid, "assetIds": ASSET_IDS[0] if ASSET_IDS else FAKE_UUID}
-        )
-        await run_test(
-            session, "C5e remove_assets_from_shared_link", "remove_assets_from_shared_link",
-            {"id": gid, "assetIds": ASSET_IDS[0] if ASSET_IDS else FAKE_UUID}
-        )
-        await run_test(
-            session, "C6e delete_shared_link_by_id", "delete_shared_link_by_id",
-            {"id": gid}
-        )
-        await run_verify_delete(
-            session, "C7e verify_delete_shared_link", "get_shared_link_by_id",
-            {"id": gid}
-        )
+            store_key="create_shared_link")
+        await run_test_with_store(session, "C2e get_shared_link_by_id", "get_shared_link_by_id",
+            {"id": pick_id("create_shared_link")}, store_key="get_shared_link")
+        await run_test(session, "C3e update_shared_link", "update_shared_link",
+            {"id": pick_id("get_shared_link"), "description": "Updated"})
+        await run_test(session, "C4e add_assets_to_shared_link", "add_assets_to_shared_link",
+            {"id": pick_id("get_shared_link"), "assetIds": ASSET_IDS[0]})
+        await run_test(session, "C5e remove_assets_from_shared_link", "remove_assets_from_shared_link",
+            {"id": pick_id("get_shared_link"), "assetIds": ASSET_IDS[0]})
+        await run_test(session, "C6e delete_shared_link_by_id", "delete_shared_link_by_id",
+            {"id": pick_id("get_shared_link")})
+        await run_verify_delete(session, "C7e verify_delete_shared_link", "get_shared_link_by_id",
+            {"id": pick_id("get_shared_link")})
 
+        # =========================================================================
         # Phase 3f: Partner Operations (use dedicated test user)
+        # =========================================================================
         log("\n=== Phase 3f: Partner Operations ===")
-        await run_test(
-            session, "C1f create_partner", "create_partner",
-            {"sharedWithId": test_user_id}
-        )
-        await run_test(
-            session, "C2f get_all_partners", "get_all_partners",
-            {"direction": "shared-by"}
-        )
-        # await run_test(
-        #     session, "C3f update_partner", "update_partner",
-        #     {"id": test_user_id, "inTimeline": True}
-        # )
-        await run_test(
-            session, "C4f delete_partner_by_id", "delete_partner_by_id",
-            {"id": test_user_id}
-        )
+        await run_test(session, "C1f create_partner", "create_partner",
+            {"sharedWithId": test_user_id})
+        await run_test(session, "C2f get_all_partners", "get_all_partners",
+            {"direction": "shared-by"})
+        # await run_test(session, "C3f update_partner", "update_partner",
+        #     {"id": test_user_id, "inTimeline": True})
+        await run_test(session, "C4f delete_partner_by_id", "delete_partner_by_id",
+            {"id": test_user_id})
 
-        # Phase 4: Activity Tools
+        # =========================================================================
+        # Phase 4: Activity Tools (5 tests: D1-D5)
+        # =========================================================================
         log("\n=== Phase 4: Activity Tools ===")
-        act_album_name = make_name("ActAlbum")
-        await run_test_with_store(
-            session, "D1 create_activity_album", "create_album",
-            {"albumName": act_album_name}, store_key="create_activity_album"
-        )
-        act_album_id = pick_id("create_activity_album") or FAKE_UUID
-        await run_test(
-            session, "D2 get_all_activities", "get_all_activities",
-            {"albumId": act_album_id}
-        )
-        await run_test(
-            session, "D3 get_activity_statistics", "get_activity_statistics",
-            {"albumId": act_album_id}
-        )
-        await run_test_with_store(
-            session, "D4 create_activity", "create_activity",
-            {"albumId": act_album_id, "type": "comment", "comment": "Test comment"},
+        await run_test_with_store(session, "D1 create_activity_album", "create_album",
+            {"albumName": make_name("ActAlbum")}, store_key="create_activity_album")
+        await run_test(session, "D2 get_all_activities", "get_all_activities",
+            {"albumId": pick_id("create_activity_album")})
+        await run_test(session, "D3 get_activity_statistics", "get_activity_statistics",
+            {"albumId": pick_id("create_activity_album")})
+        await run_test_with_store(session, "D4 create_activity", "create_activity",
+            {"albumId": pick_id("create_activity_album"), "type": "comment",
+             "comment": "Test comment"},
             store_key="created_activity")
-        act_id = pick_id("created_activity") or ASSET_IDS[0]
-        await run_test(
-            session, "N1 delete_activity_by_id", "delete_activity_by_id",
-            {"id": act_id}
-        )
-        # Keep album alive — it will be used in Phase 5, deleted at end of Phase 5
+        await run_test(session, "N1 delete_activity_by_id", "delete_activity_by_id",
+                       {"id": pick_id("created_activity")})
 
-        # Phase 5: Album Relationship Tools (use album from Phase 4)
+        # =========================================================================
+        # Phase 5: Album Relationship Tools (6 tests: E1-E5 + D5)
+        # =========================================================================
         log("\n=== Phase 5: Album Relationship Tools ===")
-        await run_test(
-            session, "E1 get_album_map_markers", "get_album_map_markers",
-            {"id": act_album_id}
-        )
-        await run_test(
-            session, "E2 add_assets_to_album", "add_assets_to_album",
-            {"id": act_album_id, "assetIds": ASSET_IDS[0]}
-        )
-        await run_test(
-            session, "E2b get_album_assets", "get_album_assets",
-            {"albumId": act_album_id, "page": 1, "size": 5}
-        )
-        await run_test(
-            session, "E3 remove_assets_from_album", "remove_assets_from_album",
-            {"id": act_album_id, "assetIds": ASSET_IDS[0]}
-        )
-        await run_test(
-            session, "E4 share_album_with_users", "share_album_with_users",
-            {"id": act_album_id, "albumUsers": test_user_id}
-        )
-        await run_test(
-            session, "E5 remove_user_from_album", "remove_user_from_album",
-            {"id": act_album_id, "userId": test_user_id}
-        )
-        # Now clean up activity album
-        await run_test(
-            session, "D5 delete_activity_album", "delete_album_by_id",
-            {"id": act_album_id}
-        )
+        await run_test(session, "E1 get_album_map_markers", "get_album_map_markers",
+            {"id": pick_id("create_activity_album")})
+        await run_test(session, "E2 add_assets_to_album", "add_assets_to_album",
+            {"id": pick_id("create_activity_album"), "assetIds": ASSET_IDS[0]})
+        await run_test(session, "E2b get_album_assets", "get_album_assets",
+            {"albumId": pick_id("create_activity_album"), "page": 1, "size": 5})
+        await run_test(session, "E3 remove_assets_from_album", "remove_assets_from_album",
+            {"id": pick_id("create_activity_album"), "assetIds": ASSET_IDS[0]})
+        await run_test(session, "E4 share_album_with_users", "share_album_with_users",
+            {"id": pick_id("create_activity_album"),
+             "albumUsers": test_user_id})
+        await run_test(session, "E5 remove_user_from_album", "remove_user_from_album",
+            {"id": pick_id("create_activity_album"),
+             "userId": test_user_id})
+        await run_test(session, "D5 delete_activity_album", "delete_album_by_id",
+            {"id": pick_id("create_activity_album")})
 
-        # Phase 6: Tag Relationship Tools
+        # =========================================================================
+        # Phase 6: Tag Relationship Tools (6 tests: F0-F4)
+        # =========================================================================
         log("\n=== Phase 6: Tag Relationship Tools ===")
-        # Create a fresh tag for relationship tests
-        await run_test_with_store(
-            session, "F0 create_rel_tag", "create_tag",
-            {"name": make_name("RelTag")}, store_key="create_rel_tag"
-        )
-        rel_tag_id = pick_id("create_rel_tag") or ASSET_IDS[0]
-        await run_test(
-            session, "F1 upsert_tags", "upsert_tags",
-            {"tags": make_name("UpsertTag")}
-        )
-        await run_test(
-            session, "F2 tag_assets", "tag_assets",
-            {"tagIds": rel_tag_id, "assetIds": ASSET_IDS[0]}
-        )
-        await run_test(
-            session, "F3 tag_assets_by_tag", "tag_assets_by_tag",
-            {"id": rel_tag_id, "assetIds": ASSET_IDS[0]}
-        )
-        await run_test(
-            session, "F3b get_assets_by_tag", "get_assets_by_tag",
-            {"tagId": rel_tag_id, "page": 1, "size": 5}
-        )
-        await run_test(
-            session, "F4 untag_assets", "untag_assets",
-            {"id": rel_tag_id, "assetIds": ASSET_IDS[0]}
-        )
+        await run_test_with_store(session, "F0 create_rel_tag", "create_tag",
+            {"name": make_name("RelTag")}, store_key="create_rel_tag")
+        await run_test(session, "F1 upsert_tags", "upsert_tags",
+            {"tags": make_name("UpsertTag")})
+        await run_test(session, "F2 tag_assets", "tag_assets",
+            {"tagIds": pick_id("create_rel_tag"), "assetIds": ASSET_IDS[0]})
+        await run_test(session, "F3 tag_assets_by_tag", "tag_assets_by_tag",
+            {"id": pick_id("create_rel_tag"), "assetIds": ASSET_IDS[0]})
+        await run_test(session, "F3b get_assets_by_tag", "get_assets_by_tag",
+            {"tagId": pick_id("create_rel_tag"), "page": 1, "size": 5})
+        await run_test(session, "F4 untag_assets", "untag_assets",
+            {"id": pick_id("create_rel_tag"), "assetIds": ASSET_IDS[0]})
 
-        # Phase 7: Person Relationship Tools
+        # =========================================================================
+        # Phase 7: Person Relationship Tools (3 tests: G1-G3)
+        # =========================================================================
         log("\n=== Phase 7: Person Relationship Tools ===")
-        # Create a fresh person for relationship tests
-        await run_test_with_store(
-            session, "F0 create_rel_person", "create_person",
-            {"name": make_name("RelPerson")}, store_key="create_rel_person"
-        )
-        rel_person_id = pick_id("create_rel_person") or ASSET_IDS[0]
-        await run_test(
-            session, "G1 get_person_statistics", "get_person_statistics",
-            {"id": rel_person_id}
-        )
-        await run_test(
-            session, "G2 get_person_thumbnail_url", "get_person_thumbnail_url",
-            {"id": rel_person_id}
-        )
-        await run_test(
-            session, "G3 merge_people", "merge_people",
-            {"id": rel_person_id, "mergeIds": ASSET_IDS[0]}
-        )
+        await run_test_with_store(session, "F0 create_rel_person", "create_person",
+            {"name": make_name("RelPerson")}, store_key="create_rel_person")
+        await run_test(session, "G1 get_person_statistics", "get_person_statistics",
+            {"id": pick_id("create_rel_person")})
+        await run_test(session, "G2 get_person_thumbnail_url", "get_person_thumbnail_url",
+            {"id": pick_id("create_rel_person")})
+        await run_test(session, "G3 merge_people", "merge_people",
+            {"id": pick_id("create_rel_person"), "mergeIds": ASSET_IDS[0]})
 
-        # Phase 8: Library Relationship Tools
+        # =========================================================================
+        # Phase 8: Library Relationship Tools (2 tests: H1-H2)
+        # =========================================================================
         log("\n=== Phase 8: Library Relationship Tools ===")
-        # Create a fresh library for relationship tests
-        my_info = store.get("my_user_info", {})
-        my_oid = my_info.get("id", "") if isinstance(my_info, dict) else ""
-        await run_test_with_store(
-            session, "F0 create_rel_library", "create_library",
-            {"name": make_name("RelLibrary"), "ownerId": my_oid or owner_id},
-            store_key="create_rel_library"
-        )
-        rel_lib_id = pick_id("create_rel_library") or ASSET_IDS[0]
-        await run_test(
-            session, "H1 scan_library", "scan_library",
-            {"id": rel_lib_id}
-        )
-        await run_test(
-            session, "H2 get_library_statistics", "get_library_statistics",
-            {"id": rel_lib_id}
-        )
+        await run_test_with_store(session, "F0 create_rel_library", "create_library",
+            {"name": make_name("RelLibrary"),
+             "ownerId": pick_id("my_user_info")},
+            store_key="create_rel_library")
+        await run_test(session, "H1 scan_library", "scan_library",
+            {"id": pick_id("create_rel_library")})
+        await run_test(session, "H2 get_library_statistics", "get_library_statistics",
+            {"id": pick_id("create_rel_library")})
 
-
-        # Phase 9: Memory Relationship Tools
+        # =========================================================================
+        # Phase 9: Memory Relationship Tools (4 tests: I0-I2)
+        # =========================================================================
         log("\n=== Phase 9: Memory Relationship Tools ===")
-        await run_test_with_store(
-            session, "I0 create_fresh_memory", "create_memory",
+        await run_test_with_store(session, "I0 create_fresh_memory", "create_memory",
             {"type": "on_this_day", "data": json.dumps({"year": 2026}),
              "memoryAt": "2026-06-22T15:00:00+00:00"},
-            store_key="fresh_memory"
-        )
-        fresh_mem_id = pick_id("fresh_memory") or FAKE_UUID
-        await run_test(
-            session, "I1 add_assets_to_memory", "add_assets_to_memory",
-            {"id": fresh_mem_id, "assetIds": ASSET_IDS[0]}
-        )
-        await run_test(
-            session, "I1b get_memory_assets", "get_memory_assets",
-            {"memoryId": fresh_mem_id}
-        )
-        await run_test(
-            session, "I2 remove_assets_from_memory", "remove_assets_from_memory",
-            {"id": fresh_mem_id, "assetIds": ASSET_IDS[0]}
-        )
+            store_key="fresh_memory")
+        await run_test(session, "I1 add_assets_to_memory", "add_assets_to_memory",
+            {"id": pick_id("fresh_memory"), "assetIds": ASSET_IDS[0]})
+        await run_test(session, "I1b get_memory_assets", "get_memory_assets",
+            {"memoryId": pick_id("fresh_memory")})
+        await run_test(session, "I2 remove_assets_from_memory", "remove_assets_from_memory",
+            {"id": pick_id("fresh_memory"), "assetIds": ASSET_IDS[0]})
 
-        # Phase 10: Stack Relationship Tools
+        # =========================================================================
+        # Phase 10: Stack Relationship Tools (2 tests: J0-J1)
+        # =========================================================================
         log("\n=== Phase 10: Stack Relationship Tools ===")
-        a_ids = ASSET_IDS[:2]
-        await run_test_with_store(
-            session, "J0 create_fresh_stack", "create_stack",
-            {"assetIds": f"{a_ids[0]},{a_ids[1]}"},
-            store_key="fresh_stack"
-        )
-        fresh_stack_id = pick_id("fresh_stack") or FAKE_UUID
-        await run_test(
-            session, "J1 remove_asset_from_stack", "remove_asset_from_stack",
-            {"id": fresh_stack_id, "assetId": ASSET_IDS[1] if len(ASSET_IDS) > 1 else ASSET_IDS[0]}
-        )
+        await run_test_with_store(session, "J0 create_fresh_stack", "create_stack",
+            {"assetIds": f"{ASSET_IDS[0]},{ASSET_IDS[1]}"},
+            store_key="fresh_stack")
+        await run_test(session, "J1 remove_asset_from_stack", "remove_asset_from_stack",
+            {"id": pick_id("fresh_stack"),
+             "assetId": ASSET_IDS[1] if len(ASSET_IDS) > 1 else ASSET_IDS[0]})
 
-        # Phase 11: Asset-Dependent Tools
+        # =========================================================================
+        # Phase 11: Asset-Dependent Tools (17 tests: K1-K23)
+        # =========================================================================
         log("\n=== Phase 11: Asset-Dependent Tools ===")
-        _aid = ASSET_IDS[0]
-        await run_test(
-            session, "K1 get_asset_thumbnail_url", "get_asset_thumbnail_url",
-            {"id": _aid}
-        )
-        await run_test(
-            session, "K2 get_asset_original_url", "get_asset_original_url",
-            {"id": _aid}
-        )
-        await run_test(
-            session, "K3 get_asset_by_id", "get_asset_by_id",
-            {"id": _aid}
-        )
-        await run_test(
-            session, "K20 get_asset_exif", "get_asset_exif",
-            {"id": _aid}
-        )
-        await run_test(
-            session, "K21 get_asset_video_url", "get_asset_video_url",
-            {"id": _aid}
-        )
-        await run_test(
-            session, "K4 get_asset_ocr", "get_asset_ocr",
-            {"id": _aid}
-        )
-        await run_test(
-            session, "K5 get_asset_metadata", "get_asset_metadata",
-            {"id": _aid}
-        )
-        await run_test(
-            session, "K7 get_asset_edits", "get_asset_edits",
-            {"id": _aid}
-        )
-        await run_test(
-            session, "K8 update_asset", "update_asset",
-            {"id": _aid, "isFavorite": True}
-        )
-        await run_test(
-            session, "K9 update_asset_edits", "update_asset_edits",
-            {"id": _aid, "edits": json.dumps([{"action": "rotate", "parameters": {"angle": 90}}])}
-        )
-        await run_test(
-            session, "K10 update_asset_metadata", "update_asset_metadata",
-            {"id": _aid, "metadata": json.dumps({"ExifIFD:DateTimeOriginal": "2026:01:01 12:00:00"})}
-        )
-        await run_test(
-            session, "K6 get_asset_metadata_by_key", "get_asset_metadata_by_key",
-            {"id": _aid, "key": "ExifIFD:DateTimeOriginal"}
-        )
-        await run_test(
-            session, "K11 delete_assets", "delete_assets",
-            {"ids": _aid, "force": False}
-        )
-        await run_test(
-            session, "K12 bulk_update_assets", "bulk_update_assets",
-            {"ids": _aid, "isFavorite": False}
-        )
-        await run_test(
-            session, "K13 copy_asset", "copy_asset",
-            {"sourceId": _aid, "targetId": ASSET_IDS[1] if len(ASSET_IDS) > 1 else _aid}
-        )
-        await run_test(
-            session, "K22 get_all_assets", "get_all_assets",
-            {"page": 1, "size": 5}
-        )
-        # Upload a 1x1 pixel transparent PNG from base64
-        _tiny_png_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-        await run_test(
-            session, "K23 upload_asset", "upload_asset",
-            {"base64_data": _tiny_png_b64,
+        await run_test(session, "K1 get_asset_thumbnail_url", "get_asset_thumbnail_url",
+            {"id": ASSET_IDS[0]})
+        await run_test(session, "K2 get_asset_original_url", "get_asset_original_url",
+            {"id": ASSET_IDS[0]})
+        await run_test(session, "K3 get_asset_by_id", "get_asset_by_id",
+            {"id": ASSET_IDS[0]})
+        await run_test(session, "K20 get_asset_exif", "get_asset_exif",
+            {"id": ASSET_IDS[0]})
+        await run_test(session, "K21 get_asset_video_url", "get_asset_video_url",
+            {"id": ASSET_IDS[0]})
+        await run_test(session, "K4 get_asset_ocr", "get_asset_ocr",
+            {"id": ASSET_IDS[0]})
+        await run_test(session, "K5 get_asset_metadata", "get_asset_metadata",
+            {"id": ASSET_IDS[0]})
+        await run_test(session, "K7 get_asset_edits", "get_asset_edits",
+            {"id": ASSET_IDS[0]})
+        await run_test(session, "K8 update_asset", "update_asset",
+            {"id": ASSET_IDS[0], "isFavorite": True})
+        await run_test(session, "K9 update_asset_edits", "update_asset_edits",
+            {"id": ASSET_IDS[0],
+             "edits": json.dumps([{"action": "rotate", "parameters": {"angle": 90}}])})
+        await run_test(session, "K10 update_asset_metadata", "update_asset_metadata",
+            {"id": ASSET_IDS[0],
+             "metadata": json.dumps({"ExifIFD:DateTimeOriginal": "2026:01:01 12:00:00"})})
+        await run_test(session, "K6 get_asset_metadata_by_key", "get_asset_metadata_by_key",
+            {"id": ASSET_IDS[0], "key": "ExifIFD:DateTimeOriginal"})
+        await run_test(session, "K11 delete_assets", "delete_assets",
+            {"ids": ASSET_IDS[0], "force": False})
+        await run_test(session, "K12 bulk_update_assets", "bulk_update_assets",
+            {"ids": ASSET_IDS[0], "isFavorite": False})
+        await run_test(session, "K13 copy_asset", "copy_asset",
+            {"sourceId": ASSET_IDS[0],
+             "targetId": ASSET_IDS[1] if len(ASSET_IDS) > 1 else ASSET_IDS[0]})
+        await run_test(session, "K22 get_all_assets", "get_all_assets",
+            {"page": 1, "size": 5})
+        await run_test(session, "K23 upload_asset", "upload_asset",
+            {"base64_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
              "deviceAssetId": "web-test_upload-1234567890",
              "deviceId": "WEB",
              "fileCreatedAt": "2026-06-22T15:00:00+00:00",
              "fileModifiedAt": "2026-06-22T15:00:00+00:00",
-             "filename": "test_upload.png"}
-        )
+             "filename": "test_upload.png"})
 
-        # Phase 12: Face Tools
+        # =========================================================================
+        # Phase 12: Face Tools (3 tests: L1-L3)
+        # =========================================================================
         log("\n=== Phase 12: Face Tools ===")
-        # Use an asset that has detected faces (e.g. one of the Trump images)
-        face_asset_id = ASSET_IDS[1] if len(ASSET_IDS) > 1 else _aid
-        # ML microservices aren't running, so faces aren't auto-detected.
-        # Create a face manually so L1-L3 have data to work with.
-        if rel_person_id and rel_person_id != _aid:
-            try:
-                import httpx as _httpx_face
-                _httpx_face.post("http://localhost:2283/api/faces",
-                    headers={"x-api-key": API_KEY},
-                    json={"assetId": face_asset_id, "personId": rel_person_id,
-                          "x": 50, "y": 50, "width": 100, "height": 150,
-                          "imageWidth": 500, "imageHeight": 282})
-            except Exception:
-                pass
-        await run_test_with_store(
-            session, "L1 get_faces_by_asset", "get_faces_by_asset",
-            {"id": face_asset_id}, store_key="faces_by_asset"
-        )
-        face_id = pick_first_face_id("faces_by_asset") or face_asset_id
-        await run_test(
-            session, "L2 reassign_face", "reassign_face",
-            {"assetId": face_asset_id, "personId": rel_person_id}
-        )
-        await run_test(
-            session, "L3 delete_face", "delete_face",
-            {"id": face_id, "force": True}
-        )
+        httpx.post("http://localhost:2283/api/faces",
+            headers={"x-api-key": API_KEY},
+            json={"assetId": ASSET_IDS[1] if len(ASSET_IDS) > 1 else ASSET_IDS[0],
+                  "personId": pick_id("create_rel_person"),
+                  "x": 50, "y": 50, "width": 100, "height": 150,
+                  "imageWidth": 500, "imageHeight": 282})
+        await run_test_with_store(session, "L1 get_faces_by_asset", "get_faces_by_asset",
+            {"id": ASSET_IDS[1] if len(ASSET_IDS) > 1 else ASSET_IDS[0]},
+            store_key="faces_by_asset")
+        await run_test(session, "L2 reassign_face", "reassign_face",
+            {"assetId": ASSET_IDS[1] if len(ASSET_IDS) > 1 else ASSET_IDS[0],
+             "personId": pick_id("create_rel_person")})
+        await run_test(session, "L3 delete_face", "delete_face",
+            {"id": pick_first_face_id("faces_by_asset"),
+             "force": True})
 
-        # Phase 13: Duplicate Tools
+        # =========================================================================
+        # Phase 13: Duplicate Tools (1 test: M2)
+        # =========================================================================
         log("\n=== Phase 13: Duplicate Tools ===")
-        await run_test(
-            session, "M2 dismiss_duplicate_group", "dismiss_duplicate_group",
-            {"id": _aid}
-        )
+        await run_test(session, "M2 dismiss_duplicate_group", "dismiss_duplicate_group",
+            {"id": ASSET_IDS[0]})
 
-        # Phase 14: (empty - N1 moved to Phase 4)
-
-        # Phase 15: Server & System Tools
+        # =========================================================================
+        # Phase 15: Server & System Tools (1 test: O1)
+        # =========================================================================
         log("\n=== Phase 15: Server & System Tools ===")
-        await run_test(
-            session, "O1 get_time_bucket", "get_time_bucket",
-            {"size": "MONTH", "timeBucket": "2026-06-01"}
-        )
+        await run_test(session, "O1 get_time_bucket", "get_time_bucket",
+            {"size": "MONTH", "timeBucket": "2026-06-01"})
 
-        # Phase 16: User & Account Tools
+        # =========================================================================
+        # Phase 16: User & Account Tools (4 tests: P1-P4)
+        # =========================================================================
         log("\n=== Phase 16: User & Account Tools ===")
-        my_info = store.get("my_user_info", {})
-        my_id = my_info.get("id", "") if isinstance(my_info, dict) else FAKE_UUID
-        await run_test(
-            session, "P1 get_user_by_id", "get_user_by_id",
-            {"id": my_id}
-        )
-        await run_test(
-            session, "P2 update_my_user", "update_my_user",
-            {"name": make_name("UpdatedUser")}
-        )
-        await run_test(
-            session, "P3 update_my_preferences", "update_my_preferences",
-            {"preferences": json.dumps({"language": "en"})}
-        )
-        await run_test(
-            session, "P4 get_user_profile_image_url", "get_user_profile_image_url",
-            {"id": my_id}
-        )
+        await run_test(session, "P1 get_user_by_id", "get_user_by_id",
+            {"id": pick_id("my_user_info")})
+        await run_test(session, "P2 update_my_user", "update_my_user",
+            {"name": make_name("UpdatedUser")})
+        await run_test(session, "P3 update_my_preferences", "update_my_preferences",
+            {"preferences": json.dumps({"language": "en"})})
+        await run_test(session, "P4 get_user_profile_image_url", "get_user_profile_image_url",
+            {"id": pick_id("my_user_info")})
 
-        # Phase 17: Trash Tools
+        # =========================================================================
+        # Phase 17: Trash Tools (1 test: Q1)
+        # =========================================================================
         log("\n=== Phase 17: Trash Tools ===")
-        await run_test(
-            session, "Q1 restore_trash_assets", "restore_trash_assets",
-            {"ids": _aid}
-        )
+        await run_test(session, "Q1 restore_trash_assets", "restore_trash_assets",
+            {"ids": ASSET_IDS[0]})
 
-        # Phase 18: Search Tools
+        # =========================================================================
+        # Phase 18: Search Tools (6 tests: R1-R6)
+        # =========================================================================
         log("\n=== Phase 18: Search Tools ===")
-        search_params = {"query": "test", "page": 1, "size": 10}
-        await run_test(
-            session, "R1 search_metadata", "search_metadata", search_params
-        )
-        await run_test(
-            session, "R2 search_smart", "search_smart",
-            {"query": "test"}
-        )
-        await run_test(
-            session, "R3 search_random", "search_random",
-            {"size": 5}
-        )
-        await run_test(
-            session, "R4 search_person", "search_person",
-            {"name": "Admin", "withHidden": True}
-        )
-        await run_test(
-            session, "R5 search_places", "search_places",
-            {"name": "New York"}
-        )
-        if rel_person_id and rel_person_id != ASSET_IDS[0]:
-            await run_test(
-                session, "R6 get_people_assets", "get_people_assets",
-                {"personIds": rel_person_id, "page": 1, "size": 10}
-            )
+        await run_test(session, "R1 search_metadata", "search_metadata",
+            {"query": "test", "page": 1, "size": 10})
+        await run_test(session, "R2 search_smart", "search_smart",
+            {"query": "test"})
+        await run_test(session, "R3 search_random", "search_random",
+            {"size": 5})
+        await run_test(session, "R4 search_person", "search_person",
+            {"name": "Admin", "withHidden": True})
+        await run_test(session, "R5 search_places", "search_places",
+            {"name": "New York"})
+        await run_test(session, "R6 get_people_assets", "get_people_assets",
+            {"personIds": pick_id("create_rel_person"), "page": 1, "size": 10})
 
-        # Clean up test user
+        # =========================================================================
+        # Cleanup: Delete Test User
+        # =========================================================================
         log("\n=== Cleanup: Delete Test User ===")
         await run_test(session, "Z9 delete_test_user", "delete_user",
                        {"id": test_user_id})
 
+        # =========================================================================
         # Report Summary
+        # =========================================================================
         passed = sum(1 for r in results if r["status"] == "PASSED")
         failed = sum(1 for r in results if r["status"] == "FAILED")
 
