@@ -328,18 +328,18 @@ async def main():
         await run_test_with_store(session, "A6 get_server_statistics", "get_server_statistics", {})
         await run_test_with_store(session, "A7 get_server_storage", "get_server_storage", {})
         await run_test_with_store(session, "A8 get_server_media_types", "get_server_media_types", {})
-        await run_test_with_store(session, "A9 get_server_version_history", "get_server_version_history", {})
+        await run_test_with_store(session, "A9 list_server_version_history", "list_server_version_history", {})
         await run_test_with_store(session, "A10 get_server_version_check", "get_server_version_check", {})
         await run_test_with_store(session, "A11 get_server_apk_links", "get_server_apk_links", {})
-        await run_test_with_store(session, "A12 get_all_albums", "get_all_albums", {})
-        await run_test_with_store(session, "A13 get_all_tags", "get_all_tags", {})
-        await run_test_with_store(session, "A14 get_all_people", "get_all_people", {})
-        await run_test_with_store(session, "A15 get_all_libraries", "get_all_libraries", {})
-        await run_test_with_store(session, "A16 get_all_memories", "get_all_memories", {})
-        await run_test_with_store(session, "A17 get_all_stacks", "get_all_stacks", {})
-        await run_test_with_store(session, "A18 get_all_shared_links", "get_all_shared_links", {})
-        await run_test_with_store(session, "A19 get_all_duplicates", "get_all_duplicates", {})
-        await run_test_with_store(session, "A20 get_all_users", "get_all_users", {})
+        await run_test_with_store(session, "A12 list_all_albums", "list_all_albums", {})
+        await run_test_with_store(session, "A13 list_all_tags", "list_all_tags", {})
+        await run_test_with_store(session, "A14 list_all_people", "list_all_people", {})
+        await run_test_with_store(session, "A15 list_all_libraries", "list_all_libraries", {})
+        await run_test_with_store(session, "A16 list_all_memories", "list_all_memories", {})
+        await run_test_with_store(session, "A17 list_all_stacks", "list_all_stacks", {})
+        await run_test_with_store(session, "A18 list_all_shared_links", "list_all_shared_links", {})
+        await run_test_with_store(session, "A19 list_all_duplicates", "list_all_duplicates", {})
+        await run_test_with_store(session, "A20 list_all_users", "list_all_users", {})
         await run_test_with_store(session, "A21 get_system_config", "get_system_config", {})
         await run_test_with_store(session, "A22 get_system_config_defaults", "get_system_config_defaults", {})
         await run_test_with_store(session, "A23 get_storage_template_options", "get_storage_template_options", {})
@@ -357,15 +357,15 @@ async def main():
         # Phase 2: List Tools (9 tests: B2)
         # =========================================================================
         log("\n=== Phase 2: List Tools ===")
-        await run_test(session, "B2 list_album", "get_all_albums", {})
-        await run_test(session, "B2 list_tag", "get_all_tags", {})
-        await run_test(session, "B2 list_person", "get_all_people", {})
-        await run_test(session, "B2 list_library", "get_all_libraries", {})
-        await run_test(session, "B2 list_memory", "get_all_memories", {})
-        await run_test(session, "B2 list_stack", "get_all_stacks", {})
-        await run_test(session, "B2 list_sharedlink", "get_all_shared_links", {})
-        await run_test(session, "B2 list_partner", "get_all_partners", {"direction": "shared-by"})
-        await run_test(session, "B2 list_duplicate", "get_all_duplicates", {})
+        await run_test(session, "B2 list_album", "list_all_albums", {})
+        await run_test(session, "B2 list_tag", "list_all_tags", {})
+        await run_test(session, "B2 list_person", "list_all_people", {})
+        await run_test(session, "B2 list_library", "list_all_libraries", {})
+        await run_test(session, "B2 list_memory", "list_all_memories", {})
+        await run_test(session, "B2 list_stack", "list_all_stacks", {})
+        await run_test(session, "B2 list_sharedlink", "list_all_shared_links", {})
+        await run_test(session, "B2 list_partner", "list_all_partners", {"direction": "shared-by"})
+        await run_test(session, "B2 list_duplicate", "list_all_duplicates", {})
 
         # =========================================================================
         # Phase 3: CRUD Cycle — Album (5 tests: C1-C5)
@@ -482,7 +482,7 @@ async def main():
         log("\n=== Phase 3f: Partner Operations ===")
         await run_test(session, "C1f create_partner", "create_partner",
             {"sharedWithId": test_user_id})
-        await run_test(session, "C2f get_all_partners", "get_all_partners",
+        await run_test(session, "C2f list_all_partners", "list_all_partners",
             {"direction": "shared-by"})
         # await run_test(session, "C3f update_partner", "update_partner",
         #     {"id": test_user_id, "inTimeline": True})
@@ -495,7 +495,7 @@ async def main():
         log("\n=== Phase 4: Activity Tools ===")
         await run_test_with_store(session, "D1 create_activity_album", "create_album",
             {"albumName": make_name("ActAlbum")}, store_key="create_activity_album")
-        await run_test(session, "D2 get_all_activities", "get_all_activities",
+        await run_test(session, "D2 list_all_activities", "list_all_activities",
             {"albumId": pick_id("create_activity_album")})
         await run_test(session, "D3 get_activity_statistics", "get_activity_statistics",
             {"albumId": pick_id("create_activity_album")})
@@ -510,7 +510,7 @@ async def main():
         # Phase 5: Album Relationship Tools (6 tests: E1-E5 + D5)
         # =========================================================================
         log("\n=== Phase 5: Album Relationship Tools ===")
-        await run_test(session, "E1 get_album_map_markers", "get_album_map_markers",
+        await run_test(session, "E1 list_album_map_markers", "list_album_map_markers",
             {"id": pick_id("create_activity_album")})
         await run_test(session, "E2 add_assets_to_album", "add_assets_to_album",
             {"id": pick_id("create_activity_album"), "assetIds": [ASSET_IDS[0]]})
@@ -537,7 +537,7 @@ async def main():
             {"tagIds": [pick_id("create_rel_tag")], "assetIds": [ASSET_IDS[0]]})
         await run_test(session, "F3 tag_assets_by_tag", "tag_assets_by_tag",
             {"id": pick_id("create_rel_tag"), "assetIds": [ASSET_IDS[0]]})
-        await run_test(session, "F3b get_assets_by_tag", "get_assets_by_tag",
+        await run_test(session, "F3b list_assets_by_tag", "list_assets_by_tag",
             {"tagId": pick_id("create_rel_tag"), "page": 1, "size": 5})
         await run_test(session, "F4 untag_assets", "untag_assets",
             {"id": pick_id("create_rel_tag"), "assetIds": [ASSET_IDS[0]]})
@@ -577,7 +577,7 @@ async def main():
             store_key="fresh_memory")
         await run_test(session, "I1 add_assets_to_memory", "add_assets_to_memory",
             {"id": pick_id("fresh_memory"), "assetIds": [ASSET_IDS[0]]})
-        await run_test(session, "I1b get_memory_assets", "get_memory_assets",
+        await run_test(session, "I1b list_assets_by_memory", "list_assets_by_memory",
             {"memoryId": pick_id("fresh_memory")})
         await run_test(session, "I2 remove_assets_from_memory", "remove_assets_from_memory",
             {"id": pick_id("fresh_memory"), "assetIds": [ASSET_IDS[0]]})
@@ -607,11 +607,11 @@ async def main():
             {"id": ASSET_IDS[0]})
         await run_test(session, "K21 get_asset_video_url", "get_asset_video_url",
             {"id": ASSET_IDS[0]})
-        await run_test(session, "K4 get_asset_ocr", "get_asset_ocr",
+        await run_test(session, "K4 list_asset_ocr", "list_asset_ocr",
             {"id": ASSET_IDS[0]})
-        await run_test(session, "K5 get_asset_metadata", "get_asset_metadata",
+        await run_test(session, "K5 list_asset_metadata", "list_asset_metadata",
             {"id": ASSET_IDS[0]})
-        await run_test(session, "K7 get_asset_edits", "get_asset_edits",
+        await run_test(session, "K7 list_asset_edits", "list_asset_edits",
             {"id": ASSET_IDS[0]})
         await run_test(session, "K8 update_asset", "update_asset",
             {"id": ASSET_IDS[0], "isFavorite": True})
@@ -630,7 +630,7 @@ async def main():
         await run_test(session, "K13 copy_asset", "copy_asset",
             {"sourceId": ASSET_IDS[0],
              "targetId": ASSET_IDS[1] if len(ASSET_IDS) > 1 else ASSET_IDS[0]})
-        await run_test(session, "K22 get_all_assets", "get_all_assets",
+        await run_test(session, "K22 list_all_assets", "list_all_assets",
             {"page": 1, "size": 5})
         await run_test(session, "K23 upload_asset", "upload_asset",
             {"base64_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
@@ -650,7 +650,7 @@ async def main():
                   "personId": pick_id("create_rel_person"),
                   "x": 50, "y": 50, "width": 100, "height": 150,
                   "imageWidth": 500, "imageHeight": 282})
-        await run_test_with_store(session, "L1 get_faces_by_asset", "get_faces_by_asset",
+        await run_test_with_store(session, "L1 list_faces_by_asset", "list_faces_by_asset",
             {"id": ASSET_IDS[1] if len(ASSET_IDS) > 1 else ASSET_IDS[0]},
             store_key="faces_by_asset")
         await run_test(session, "L2 reassign_face", "reassign_face",
@@ -671,7 +671,7 @@ async def main():
         # Phase 15: Server & System Tools (1 test: O1)
         # =========================================================================
         log("\n=== Phase 15: Server & System Tools ===")
-        await run_test(session, "O1 get_time_bucket", "get_time_bucket",
+        await run_test(session, "O1 list_time_bucket_assets", "list_time_bucket_assets",
             {"size": "MONTH", "timeBucket": "2026-06-01"})
 
         # =========================================================================
@@ -708,7 +708,7 @@ async def main():
             {"name": "Admin", "withHidden": True})
         await run_test(session, "R5 search_places", "search_places",
             {"name": "New York"})
-        await run_test(session, "R6 get_people_assets", "get_people_assets",
+        await run_test(session, "R6 list_assets_by_people", "list_assets_by_people",
             {"personIds": [pick_id("create_rel_person")], "page": 1, "size": 10})
 
         # =========================================================================

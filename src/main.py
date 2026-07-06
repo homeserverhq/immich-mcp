@@ -401,7 +401,7 @@ async def get_server_version_check(ctx: Context) -> dict[str, Any]:
     return await get_client().get_server_version_check(get_user_token())
 
 @mcp.tool(tags={"read", "advanced", "immich"})
-async def get_server_version_history(ctx: Context) -> dict[str, Any]:
+async def list_server_version_history(ctx: Context) -> dict[str, Any]:
     """Get version history."""
     result = await get_client().get_server_version_history(get_user_token())
     return {"results": result} if isinstance(result, list) else result
@@ -451,7 +451,7 @@ async def get_asset_exif(
     return {"exifInfo": exif}
 
 @mcp.tool(tags={"read", "advanced", "immich"})
-async def get_asset_ocr(
+async def list_asset_ocr(
     id: str,
     ctx: Context
 ) -> dict[str, Any]:
@@ -464,7 +464,7 @@ async def get_asset_ocr(
     return {"items": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"read", "advanced", "immich"})
-async def get_asset_metadata(
+async def list_asset_metadata(
     id: str,
     ctx: Context
 ) -> dict[str, Any]:
@@ -491,7 +491,7 @@ async def get_asset_metadata_by_key(
     return await get_client().get_asset_metadata_by_key(id, key, get_user_token())
 
 @mcp.tool(tags={"read", "advanced", "immich"})
-async def get_asset_edits(
+async def list_asset_edits(
     id: str,
     ctx: Context
 ) -> dict[str, Any]:
@@ -558,13 +558,13 @@ livePhotoVideoId: Optional[str] = None,
 
     Args:
         id: The unique ID of the asset.
-        isFavorite: Mark as favorite.
+        isFavorite: True to mark as favorite.
         description: Asset description.
         latitude: Latitude coordinate.
         longitude: Longitude coordinate.
         dateTimeOriginal: ISO 8601 format (2026-06-22T15:00:00-04:00).
         rating: Rating in range [1-5] (starred), -1 (rejected), or null (unrated).
-        visibility: Asset visibility (PUBLIC, PRIVATE).
+        visibility: Asset visibility: archive, timeline, hidden, or locked.
         livePhotoVideoId: Live photo video ID.
     """
     params = UpdateAssetParam(
@@ -645,15 +645,15 @@ timeZone: Optional[str] = None,
 
     Args:
         ids: List of asset IDs to update.
-        isFavorite: Mark as favorite.
+        isFavorite: True to mark as favorite.
         description: Asset description.
         latitude: Latitude coordinate.
         longitude: Longitude coordinate.
         dateTimeOriginal: ISO 8601 format (2026-06-22T15:00:00-04:00).
         rating: Rating in range [1-5], -1, or null.
-        visibility: Asset visibility.
-        duplicateId: Duplicate ID.
-        timeZone: Time zone (IANA timezone).
+        visibility: Asset visibility: archive, timeline, hidden, or locked.
+        duplicateId: Set to assign asset to a duplicate group, or null to remove from group.
+        timeZone: Time zone in IANA format (e.g. America/New_York).
     """
     params = AssetBulkUpdateParam(
         ids=ids,
@@ -685,7 +685,7 @@ stack: bool = False,
         albums: Copy album associations.
         favorite: Copy favorite status.
         sharedLinks: Copy shared links.
-        sidecar: Copy sidecar file.
+        sidecar: Copy associated sidecar metadata file (.xmp).
         stack: Copy stack association.
     """
     params = CopyAssetParam(
@@ -698,7 +698,7 @@ stack: bool = False,
     )
 
 @mcp.tool(tags={"read", "basic", "immich"})
-async def get_all_assets(
+async def list_all_assets(
     ctx: Context,
     page: int = 1,
     size: int = 100,
@@ -742,8 +742,8 @@ async def get_all_assets(
         city: Filter by city name.
         state: Filter by state/province name.
         country: Filter by country name.
-        make: Filter by camera make.
-        model: Filter by camera model.
+        make: Filter by camera make (e.g. Canon, Apple).
+        model: Filter by camera model (e.g. EOS R5, iPhone 15).
         personIds: List of person IDs.
         tagIds: List of tag IDs.
         albumIds: List of album IDs.
@@ -780,7 +780,7 @@ async def get_all_assets(
     )
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_assets_by_tag(
+async def list_assets_by_tag(
     tagId: str,
     ctx: Context,
     page: int = 1,
@@ -801,7 +801,7 @@ async def get_assets_by_tag(
     )
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_album_assets(
+async def list_assets_by_album(
     albumId: str,
     ctx: Context,
     page: int = 1,
@@ -822,7 +822,7 @@ async def get_album_assets(
     )
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_memory_assets(
+async def list_assets_by_memory(
     memoryId: str,
     ctx: Context,
     include_all_fields: bool = False,
@@ -861,8 +861,8 @@ async def upload_asset(
         fileModifiedAt: File modification timestamp ISO 8601 format (2026-06-22T15:00:00-04:00).
         filename: Original filename.
         duration: Duration in seconds (for video assets).
-        isFavorite: Mark as favorite.
-        visibility: Asset visibility (public, private).
+        isFavorite: True to mark as favorite.
+        visibility: Asset visibility: archive, timeline, hidden, or locked.
     """
     return await get_client().upload_asset(
         base64_data, deviceAssetId, deviceId, fileCreatedAt, fileModifiedAt, get_user_token(),
@@ -875,7 +875,7 @@ async def upload_asset(
 # =============================================================================
 
 @mcp.tool(tags={"read", "basic", "immich"})
-async def get_all_albums(
+async def list_all_albums(
 ctx: Context,
 include_all_fields: bool = False,
 ) -> dict[str, Any]:
@@ -948,7 +948,7 @@ order: Optional[str] = None,
         albumName: New album name.
         description: New album description.
         albumThumbnailAssetId: Asset ID for the album thumbnail.
-        isActivityEnabled: Enable activity feed.
+        isActivityEnabled: True to enable activity feed.
         order: asc or desc.
     """
     params = UpdateAlbumParam(
@@ -1040,7 +1040,7 @@ async def get_album_statistics(ctx: Context) -> dict[str, Any]:
     return await get_client().get_album_statistics(get_user_token())
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_album_map_markers(
+async def list_album_map_markers(
     id: str,
     ctx: Context
 ) -> dict[str, Any]:
@@ -1057,7 +1057,7 @@ async def get_album_map_markers(
 # =============================================================================
 
 @mcp.tool(tags={"read", "basic", "immich"})
-async def get_all_tags(
+async def list_all_tags(
 ctx: Context,
 include_all_fields: bool = False,
 ) -> dict[str, Any]:
@@ -1204,7 +1204,7 @@ async def untag_assets(
 # =============================================================================
 
 @mcp.tool(tags={"read", "basic", "immich"})
-async def get_all_people(
+async def list_all_people(
 ctx: Context,
 include_all_fields: bool = False,
 ) -> dict[str, Any]:
@@ -1249,9 +1249,9 @@ isHidden: bool = False,
     Args:
         name: Person name.
         birthDate: Person date of birth. ISO 8601 format (2026-06-22T15:00:00-04:00).
-        color: Person color in hex format.
-        isFavorite: Mark as favorite.
-        isHidden: Person visibility (hidden).
+        color: Person color in hex format (e.g. #FF0000).
+        isFavorite: True to mark as favorite.
+        isHidden: True to hide person from People view.
     """
     params = CreatePersonParam(
         name=name, birthDate=birthDate, color=color,
@@ -1278,9 +1278,9 @@ featureFaceAssetId: Optional[str] = None,
         id: The unique ID of the person.
         name: Person name.
         birthDate: Person date of birth. ISO 8601 format (2026-06-22T15:00:00-04:00).
-        color: Person color in hex format.
-        isFavorite: Mark as favorite.
-        isHidden: Person visibility (hidden).
+        color: Person color in hex format (e.g. #FF0000).
+        isFavorite: True to mark as favorite.
+        isHidden: True to hide person from People view.
         featureFaceAssetId: Asset ID used for feature face thumbnail.
     """
     params = UpdatePersonParam(
@@ -1346,7 +1346,7 @@ async def get_person_thumbnail_url(
     return {"url": url}
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_faces_by_asset(
+async def list_faces_by_asset(
     id: str,
     ctx: Context
 ) -> dict[str, Any]:
@@ -1394,7 +1394,7 @@ async def delete_face(
 # =============================================================================
 
 @mcp.tool(tags={"read", "advanced", "immich"})
-async def get_all_libraries(
+async def list_all_libraries(
 ctx: Context,
 include_all_fields: bool = False,
 ) -> dict[str, Any]:
@@ -1514,7 +1514,7 @@ async def get_library_statistics(
 # =============================================================================
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_all_memories(
+async def list_all_memories(
 ctx: Context,
 include_all_fields: bool = False,
 ) -> dict[str, Any]:
@@ -1562,7 +1562,7 @@ seenAt: str = "",
         memoryAt: Memory date. ISO 8601 format (2026-06-22T15:00:00-04:00).
         year: Year for the on_this_day memory.
         assetIds: List of asset IDs.
-        isSaved: Save memory.
+        isSaved: True to save memory.
         hideAt: Date when memory should be hidden. ISO 8601 format (2026-06-22T15:00:00-04:00).
         showAt: Date when memory should be shown. ISO 8601 format (2026-06-22T15:00:00-04:00).
         seenAt: Date when memory was seen. ISO 8601 format (2026-06-22T15:00:00-04:00).
@@ -1596,7 +1596,7 @@ seenAt: Optional[str] = None,
 
     Args:
         id: The unique ID of the memory.
-        isSaved: Save memory.
+        isSaved: True to save memory.
         memoryAt: Memory date. ISO 8601 format (2026-06-22T15:00:00-04:00).
         seenAt: Date when memory was seen. ISO 8601 format (2026-06-22T15:00:00-04:00).
     """
@@ -1659,7 +1659,7 @@ async def get_memory_statistics(ctx: Context) -> dict[str, Any]:
 # =============================================================================
 
 @mcp.tool(tags={"read", "advanced", "immich"})
-async def get_all_stacks(
+async def list_all_stacks(
 ctx: Context,
 include_all_fields: bool = False,
 ) -> dict[str, Any]:
@@ -1751,7 +1751,7 @@ async def remove_asset_from_stack(
 # =============================================================================
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_all_shared_links(
+async def list_all_shared_links(
 ctx: Context,
 include_all_fields: bool = False,
 ) -> dict[str, Any]:
@@ -1905,7 +1905,7 @@ async def remove_assets_from_shared_link(
 # =============================================================================
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_all_activities(
+async def list_all_activities(
 ctx: Context,
 albumId: str = "",
 assetId: str = "",
@@ -1919,7 +1919,7 @@ include_all_fields: bool = False,
         albumId: Filter by album ID.
         assetId: Filter by asset ID.
         type: Filter by reaction type (like, comment).
-        level: Filter by reaction level.
+        level: Filter by reaction level: album or asset.
         include_all_fields: Default False (common fields only). Set True for all fields.
     """
     params = {}
@@ -1995,7 +1995,7 @@ async def delete_activity_by_id(
 # =============================================================================
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_all_partners(
+async def list_all_partners(
 ctx: Context,
 direction: str = "",
 include_all_fields: bool = False,
@@ -2041,7 +2041,7 @@ async def update_partner(
 
     Args:
         id: Partner (user) ID.
-        inTimeline: Show partner assets in timeline.
+        inTimeline: True to show partner assets in your timeline.
     """
     params = UpdatePartnerParam(inTimeline=inTimeline)
     return await get_client().update_partner(
@@ -2171,13 +2171,13 @@ model: Optional[str] = None,
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 50.
         include_all_fields: Default False (common fields only). Set True for all fields.
-        type: Asset type.
+        type: Asset type: IMAGE, VIDEO, AUDIO, or OTHER.
         isFavorite: Filter by favorite.
         city: Filter by city.
         state: Filter by state.
         country: Filter by country.
-        make: Filter by camera make.
-        model: Filter by camera model.
+        make: Filter by camera make (e.g. Canon, Apple).
+        model: Filter by camera model (e.g. EOS R5, iPhone 15).
         personIds: List of person IDs.
         tagIds: List of tag IDs.
         albumIds: List of album IDs.
@@ -2260,8 +2260,8 @@ async def search_random(
         city: Filter by city name.
         state: Filter by state/province name.
         country: Filter by country name.
-        make: Filter by camera make.
-        model: Filter by camera model.
+        make: Filter by camera make (e.g. Canon, Apple).
+        model: Filter by camera model (e.g. EOS R5, iPhone 15).
     """
     payload: dict[str, Any] = {"size": size}
     if type: payload["type"] = type
@@ -2311,7 +2311,7 @@ async def search_places(
     return {"results": result} if isinstance(result, list) else result
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_people_assets(
+async def list_assets_by_people(
     ctx: Context,
     personIds: list[str],
     page: int = 1,
@@ -2344,7 +2344,7 @@ async def get_people_assets(
 # =============================================================================
 
 @mcp.tool(tags={"read", "basic", "immich"})
-async def get_time_buckets(
+async def list_time_buckets(
 size: str,
 ctx: Context,
 albumId: str = "",
@@ -2367,7 +2367,7 @@ userId: str = "",
     return {"results": result} if isinstance(result, list) else result
 
 @mcp.tool(tags={"read", "basic", "immich"})
-async def get_time_bucket(
+async def list_time_bucket_assets(
 size: str,
 timeBucket: str,
 ctx: Context,
@@ -2379,7 +2379,7 @@ userId: str = "",
 
     Args:
         size: Bucket size (MONTH, DAY).
-        timeBucket: The time bucket key from get_time_buckets.
+        timeBucket: The time bucket key from list_time_buckets.
         albumId: Filter by album.
         personId: Filter by person.
         userId: Filter by user.
@@ -2392,7 +2392,7 @@ userId: str = "",
     return {"items": json_to_toon(data)}
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_map_markers(
+async def list_map_markers(
 ctx: Context,
 fileCreatedAfter: str = "",
 fileCreatedBefore: str = "",
@@ -2439,7 +2439,7 @@ async def reverse_geocode(
 # =============================================================================
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_all_duplicates(
+async def list_all_duplicates(
 ctx: Context,
 include_all_fields: bool = False,
 ) -> dict[str, Any]:
@@ -2517,7 +2517,7 @@ async def get_storage_template_options(ctx: Context) -> dict[str, Any]:
 # =============================================================================
 
 @mcp.tool(tags={"read", "primary", "immich"})
-async def get_all_users(
+async def list_all_users(
 ctx: Context,
 include_all_fields: bool = False,
 ) -> dict[str, Any]:
@@ -2576,7 +2576,7 @@ avatarColor: Optional[str] = None,
         email: New email address.
         name: New display name.
         password: New password (deprecated, use change password endpoint).
-        avatarColor: Preferred avatar color.
+        avatarColor: Avatar color: primary, pink, red, yellow, blue, green, purple, orange, gray, or amber.
     """
     params = UpdateMyUserParam(
         email=email, name=name, password=password, avatarColor=avatarColor,
