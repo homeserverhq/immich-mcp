@@ -2798,9 +2798,9 @@ def main():
     port = int(port_env)
     path = "/mcp"
     if IS_STATEFUL:
-        app = mcp.http_app(path=path)
+        app = mcp.http_app(path=path, json_response=True)
     else:
-        app = mcp.http_app(path=path, stateless_http=True)
+        app = mcp.http_app(path=path, json_response=True, stateless_http=True)
     app = AuthMiddleware(app)
     print(f"Starting Immich MCP server on http://{host}:{port}{path}")
     import uvicorn
