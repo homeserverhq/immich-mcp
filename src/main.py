@@ -933,7 +933,7 @@ assetIds: str = "",
         payload["albumUsers"] = users_list
     if asset_list:
         payload["assetIds"] = asset_list
-    return await get_client().create_album(payload, get_user_token())
+    return await get_client().create_album(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def update_album(
@@ -961,7 +961,7 @@ order: Optional[str] = None,
         isActivityEnabled=isActivityEnabled, order=order,
     )
     return await get_client().update_album(
-        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"write", "primary", "immich"})
@@ -1113,7 +1113,7 @@ parentId: str = "",
         payload["color"] = color
     if parentId:
         payload["parentId"] = parentId
-    return await get_client().create_tag(payload, get_user_token())
+    return await get_client().create_tag(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def update_tag(
@@ -1129,7 +1129,7 @@ color: Optional[str] = None,
     """
     params = UpdateTagParam(color=color)
     return await get_client().update_tag(
-        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"write", "primary", "immich"})
@@ -1269,7 +1269,7 @@ isHidden: bool = False,
         isFavorite=isFavorite, isHidden=isHidden,
     )
     return await get_client().create_person(
-        params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"write", "primary", "immich"})
@@ -1300,7 +1300,7 @@ featureFaceAssetId: Optional[str] = None,
         featureFaceAssetId=featureFaceAssetId,
     )
     return await get_client().update_person(
-        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"write", "primary", "immich"})
@@ -1461,7 +1461,7 @@ exclusionPatterns: str = "",
         payload["importPaths"] = import_list
     if exclude_list:
         payload["exclusionPatterns"] = exclude_list
-    return await get_client().create_library(payload, get_user_token())
+    return await get_client().create_library(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def update_library(
@@ -1485,7 +1485,7 @@ exclusionPatterns: Optional[str] = None,
         payload["importPaths"] = [p.strip() for p in importPaths.split(",") if p.strip()]
     if exclusionPatterns is not None:
         payload["exclusionPatterns"] = [p.strip() for p in exclusionPatterns.split(",") if p.strip()]
-    return await get_client().update_library(id, payload, get_user_token())
+    return await get_client().update_library(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def delete_library_by_id(
@@ -1719,7 +1719,7 @@ async def create_stack(
     """
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"assetIds": asset_list}
-    return await get_client().create_stack(payload, get_user_token())
+    return await get_client().create_stack(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def update_stack(
@@ -1735,7 +1735,7 @@ primaryAssetId: Optional[str] = None,
     """
     params = UpdateStackParam(primaryAssetId=primaryAssetId)
     return await get_client().update_stack(
-        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"write", "advanced", "immich"})
@@ -1839,7 +1839,7 @@ slug: str = "",
         payload["assetIds"] = [a.strip() for a in assetIds.split(",") if a.strip()]
     if albumId:
         payload["albumId"] = albumId
-    return await get_client().create_shared_link(payload, get_user_token())
+    return await get_client().create_shared_link(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def update_shared_link(
@@ -1871,7 +1871,7 @@ slug: Optional[str] = None,
         showMetadata=showMetadata, slug=slug,
     )
     return await get_client().update_shared_link(
-        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"write", "primary", "immich"})
@@ -1996,7 +1996,7 @@ comment: str = "",
         payload["assetId"] = assetId
     if comment:
         payload["comment"] = comment
-    return await get_client().create_activity(payload, get_user_token())
+    return await get_client().create_activity(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def delete_activity_by_id(
@@ -2048,7 +2048,7 @@ async def create_partner(
     """
     params = CreatePartnerParam(sharedWithId=sharedWithId)
     return await get_client().create_partner(
-        params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"write", "advanced", "immich"})
@@ -2065,7 +2065,7 @@ async def update_partner(
     """
     params = UpdatePartnerParam(inTimeline=inTimeline)
     return await get_client().update_partner(
-        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"write", "advanced", "immich"})
@@ -2171,6 +2171,7 @@ query: str,
 ctx: Context,
 page: int = 1,
 size: int = 50,
+include_all_fields: bool = False,
 type: Optional[str] = None,
 isFavorite: Optional[bool] = None,
 city: Optional[str] = None,
@@ -2189,6 +2190,7 @@ libraryId: Optional[str] = None,
         query: Natural language search query.
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 50.
+        include_all_fields: Default False (common fields only). Set True for all fields.
         type: Asset type.
         isFavorite: Filter by favorite.
         city: Filter by city.
@@ -2213,7 +2215,7 @@ libraryId: Optional[str] = None,
     if tagIds: payload["tagIds"] = [t.strip() for t in tagIds.split(",") if t.strip()]
     if albumIds: payload["albumIds"] = [a.strip() for a in albumIds.split(",") if a.strip()]
     if libraryId: payload["libraryId"] = libraryId
-    return await get_client().search_smart(payload, get_user_token())
+    return await get_client().search_smart(payload, get_user_token(), include_all_fields=include_all_fields)
 
 @mcp.tool(tags={"read", "primary", "immich"})
 async def search_suggestions(
@@ -2247,6 +2249,7 @@ async def search_cities(ctx: Context) -> dict[str, Any]:
 async def search_random(
     ctx: Context,
     size: int = 100,
+    include_all_fields: bool = False,
     type: Optional[str] = None,
     isFavorite: Optional[bool] = None,
     isMotion: Optional[bool] = None,
@@ -2265,6 +2268,7 @@ async def search_random(
 
     Args:
         size: Number of results to return. Defaults to 100.
+        include_all_fields: Default False (common fields only). Set True for all fields.
         type: IMAGE, VIDEO, AUDIO, or OTHER.
         isFavorite: Filter by favorite status.
         isMotion: Filter by motion photo.
@@ -2293,7 +2297,7 @@ async def search_random(
     if country: payload["country"] = country
     if make: payload["make"] = make
     if model: payload["model"] = model
-    data = await get_client().search_random(payload, get_user_token())
+    data = await get_client().search_random(payload, get_user_token(), include_all_fields=include_all_fields)
     return {"results": data} if isinstance(data, list) else data
 
 @mcp.tool(tags={"read", "primary", "immich"})
@@ -2600,7 +2604,7 @@ avatarColor: Optional[str] = None,
         email=email, name=name, password=password, avatarColor=avatarColor,
     )
     return await get_client().update_my_user(
-        params.model_dump(exclude_unset=True, exclude_none=True), get_user_token()
+        params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
 
 @mcp.tool(tags={"read", "primary", "immich"})

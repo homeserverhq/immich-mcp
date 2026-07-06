@@ -315,11 +315,17 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["album"])
         return data
 
-    async def create_album(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/albums", api_key, json=payload)
+    async def create_album(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.post("/albums", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["album"])
+        return data
 
-    async def update_album(self, album_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.patch(f"/albums/{album_id}", api_key, json=payload)
+    async def update_album(self, album_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.patch(f"/albums/{album_id}", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["album"])
+        return data
 
     async def delete_album_by_id(self, album_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/albums/{album_id}", api_key)
@@ -373,11 +379,17 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["tag"])
         return data
 
-    async def create_tag(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/tags", api_key, json=payload)
+    async def create_tag(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.post("/tags", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["tag"])
+        return data
 
-    async def update_tag(self, tag_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.put(f"/tags/{tag_id}", api_key, json=payload)
+    async def update_tag(self, tag_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.put(f"/tags/{tag_id}", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["tag"])
+        return data
 
     async def delete_tag_by_id(self, tag_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/tags/{tag_id}", api_key)
@@ -416,11 +428,17 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["person"])
         return data
 
-    async def create_person(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/people", api_key, json=payload)
+    async def create_person(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.post("/people", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["person"])
+        return data
 
-    async def update_person(self, person_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.put(f"/people/{person_id}", api_key, json=payload)
+    async def update_person(self, person_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.put(f"/people/{person_id}", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["person"])
+        return data
 
     async def delete_person_by_id(self, person_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/people/{person_id}", api_key)
@@ -474,11 +492,17 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["library"])
         return data
 
-    async def create_library(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/libraries", api_key, json=payload)
+    async def create_library(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.post("/libraries", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["library"])
+        return data
 
-    async def update_library(self, library_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.put(f"/libraries/{library_id}", api_key, json=payload)
+    async def update_library(self, library_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.put(f"/libraries/{library_id}", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["library"])
+        return data
 
     async def delete_library_by_id(self, library_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/libraries/{library_id}", api_key)
@@ -554,11 +578,17 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["stack"])
         return data
 
-    async def create_stack(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/stacks", api_key, json=payload)
+    async def create_stack(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.post("/stacks", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["stack"])
+        return data
 
-    async def update_stack(self, stack_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.put(f"/stacks/{stack_id}", api_key, json=payload)
+    async def update_stack(self, stack_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.put(f"/stacks/{stack_id}", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["stack"])
+        return data
 
     async def delete_stack_by_id(self, stack_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/stacks/{stack_id}", api_key)
@@ -600,11 +630,17 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["shared_link"])
         return data
 
-    async def create_shared_link(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/shared-links", api_key, json=payload)
+    async def create_shared_link(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.post("/shared-links", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["shared_link"])
+        return data
 
-    async def update_shared_link(self, shared_link_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.patch(f"/shared-links/{shared_link_id}", api_key, json=payload)
+    async def update_shared_link(self, shared_link_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.patch(f"/shared-links/{shared_link_id}", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["shared_link"])
+        return data
 
     async def delete_shared_link_by_id(self, shared_link_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/shared-links/{shared_link_id}", api_key)
@@ -632,8 +668,11 @@ class ImmichClient:
     async def get_activity_statistics(self, api_key: Optional[str] = None, params: Optional[dict] = None) -> Any:
         return await self.get("/activities/statistics", api_key, params=params)
 
-    async def create_activity(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/activities", api_key, json=payload)
+    async def create_activity(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.post("/activities", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["activity"])
+        return data
 
     async def delete_activity_by_id(self, activity_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/activities/{activity_id}", api_key)
@@ -652,11 +691,17 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["partner"])
         return data
 
-    async def create_partner(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/partners", api_key, json=payload)
+    async def create_partner(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.post("/partners", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["partner"])
+        return data
 
-    async def update_partner(self, partner_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.put(f"/partners/{partner_id}", api_key, json=payload)
+    async def update_partner(self, partner_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.put(f"/partners/{partner_id}", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["partner"])
+        return data
 
     async def delete_partner_by_id(self, partner_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/partners/{partner_id}", api_key)
@@ -674,11 +719,17 @@ class ImmichClient:
             data = _filter_search_assets(data, COMMON_FIELDS["asset"])
         return data
 
-    async def search_smart(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/search/smart", api_key, json=payload)
+    async def search_smart(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.post("/search/smart", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_search_assets(data, COMMON_FIELDS["asset"])
+        return data
 
-    async def search_random(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/search/random", api_key, json=payload)
+    async def search_random(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.post("/search/random", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_search_assets(data, COMMON_FIELDS["asset"])
+        return data
 
     async def search_suggestions(self, params: dict, api_key: Optional[str] = None) -> Any:
         return await self.get("/search/suggestions", api_key, params=params)
@@ -790,8 +841,11 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["user"])
         return data
 
-    async def update_my_user(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.put("/users/me", api_key, json=payload)
+    async def update_my_user(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.put("/users/me", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["user"])
+        return data
 
     async def get_my_preferences(self, api_key: Optional[str] = None) -> Any:
         return await self.get("/users/me/preferences", api_key)
