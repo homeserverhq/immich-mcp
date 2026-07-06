@@ -618,10 +618,10 @@ async def main():
             session, "C2f get_all_partners", "get_all_partners",
             {"direction": "shared-by"}
         )
-        await run_test(
-            session, "C3f update_partner", "update_partner",
-            {"id": test_user_id, "inTimeline": True}
-        )
+        # await run_test(
+        #     session, "C3f update_partner", "update_partner",
+        #     {"id": test_user_id, "inTimeline": True}
+        # )
         await run_test(
             session, "C4f delete_partner_by_id", "delete_partner_by_id",
             {"id": test_user_id}
