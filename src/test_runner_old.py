@@ -524,7 +524,7 @@ async def main():
         log("\n=== Phase 3c: Memory CRUD ===")
         await run_test_with_store(
             session, "C1c create_memory", "create_memory",
-            {"type": "on_this_day", "data": json.dumps({"year": 2026}),
+            {"type": "on_this_day", "year": 2026,
              "memoryAt": "2026-06-22T15:00:00+00:00"},
             store_key="create_memory"
         )
@@ -761,7 +761,7 @@ async def main():
         log("\n=== Phase 9: Memory Relationship Tools ===")
         await run_test_with_store(
             session, "I0 create_fresh_memory", "create_memory",
-            {"type": "on_this_day", "data": json.dumps({"year": 2026}),
+            {"type": "on_this_day", "year": 2026,
              "memoryAt": "2026-06-22T15:00:00+00:00"},
             store_key="fresh_memory"
         )
@@ -834,11 +834,11 @@ async def main():
         )
         await run_test(
             session, "K9 update_asset_edits", "update_asset_edits",
-            {"id": _aid, "edits": json.dumps([{"action": "rotate", "parameters": {"angle": 90}}])}
+            {"id": _aid, "edits": [{"action": "rotate", "parameters": {"angle": 90}}]}
         )
         await run_test(
             session, "K10 update_asset_metadata", "update_asset_metadata",
-            {"id": _aid, "metadata": json.dumps({"ExifIFD:DateTimeOriginal": "2026:01:01 12:00:00"})}
+            {"id": _aid, "items": [{"key": "ExifIFD:DateTimeOriginal", "value": {"val": "2026:01:01 12:00:00"}}]}
         )
         await run_test(
             session, "K6 get_asset_metadata_by_key", "get_asset_metadata_by_key",
@@ -932,7 +932,7 @@ async def main():
         )
         await run_test(
             session, "P3 update_my_preferences", "update_my_preferences",
-            {"preferences": json.dumps({"language": "en"})}
+            {"preferences": {"ratings": {"enabled": True}}}
         )
         await run_test(
             session, "P4 get_user_profile_image_url", "get_user_profile_image_url",

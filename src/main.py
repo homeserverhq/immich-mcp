@@ -2,10 +2,10 @@ import json
 import os
 import sys
 from contextvars import ContextVar
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from fastmcp import FastMCP, Context
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from toon_mcp import json_to_toon
 
 from .client import ImmichClient
@@ -321,6 +321,106 @@ class UpdateMyUserParam(BaseModel):
 class UpdateMyPreferencesParam(BaseModel):
     preferences: dict
 
+
+class AssetMetadataEntry(BaseModel):
+    key: str = Field(description="Metadata key (e.g. 'mobile-app').")
+    value: dict = Field(description="Metadata value as an arbitrary JSON object (e.g. {'someField': 'someValue'}).")
+
+
+class CropParameters(BaseModel):
+    x: int = Field(description="Top-left X coordinate in pixels.")
+    y: int = Field(description="Top-left Y coordinate in pixels.")
+    width: int = Field(description="Width of the crop rectangle in pixels.")
+    height: int = Field(description="Height of the crop rectangle in pixels.")
+
+
+class RotateParameters(BaseModel):
+    angle: float = Field(description="Rotation angle. Must be 0, 90, 180, or 270.")
+
+
+class MirrorParameters(BaseModel):
+    axis: str = Field(description="Mirror axis. 'horizontal' or 'vertical'.")
+
+
+class AssetEditItem(BaseModel):
+    action: str = Field(description="Edit action. One of: 'crop', 'rotate', 'mirror'.")
+    parameters: Union[CropParameters, RotateParameters, MirrorParameters] = Field(
+        description="Parameters for the edit action. Use the matching parameters type for the chosen action."
+    )
+
+
+class AlbumsPref(BaseModel):
+    defaultAssetOrder: Optional[str] = Field(default=None, description="Default sort order for album assets. 'asc' or 'desc'.")
+
+
+class AvatarPref(BaseModel):
+    color: Optional[str] = Field(default=None, description="Avatar color. One of: 'primary', 'pink', 'red', 'yellow', 'blue', 'green', 'purple', 'orange', 'gray', 'amber'.")
+
+
+class CastPref(BaseModel):
+    gCastEnabled: Optional[bool] = Field(default=None, description="Enable Google Cast support.")
+
+
+class DownloadPref(BaseModel):
+    archiveSize: Optional[int] = Field(default=None, description="Download archive size limit in bytes.")
+    includeEmbeddedVideos: Optional[bool] = Field(default=None, description="Include embedded videos in downloads.")
+
+
+class EmailNotificationsPref(BaseModel):
+    enabled: Optional[bool] = Field(default=None, description="Enable email notifications.")
+    albumInvite: Optional[bool] = Field(default=None, description="Notify on album invite.")
+    albumUpdate: Optional[bool] = Field(default=None, description="Notify on album update.")
+
+
+class FoldersPref(BaseModel):
+    enabled: Optional[bool] = Field(default=None, description="Enable folder views.")
+    sidebarWeb: Optional[bool] = Field(default=None, description="Show folders in web sidebar.")
+
+
+class MemoriesPref(BaseModel):
+    enabled: Optional[bool] = Field(default=None, description="Enable memories feature.")
+    duration: Optional[int] = Field(default=None, description="Memory display duration in seconds.")
+
+
+class PeoplePref(BaseModel):
+    enabled: Optional[bool] = Field(default=None, description="Enable people/facial recognition.")
+    sidebarWeb: Optional[bool] = Field(default=None, description="Show people in web sidebar.")
+    minimumFaces: Optional[int] = Field(default=None, description="Minimum number of faces to show a person.")
+
+
+class PurchasePref(BaseModel):
+    showSupportBadge: Optional[bool] = Field(default=None, description="Show support badge.")
+    hideBuyButtonUntil: Optional[str] = Field(default=None, description="Hide purchase button until date. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).")
+
+
+class RatingsPref(BaseModel):
+    enabled: Optional[bool] = Field(default=None, description="Enable star ratings.")
+
+
+class SharedLinksPref(BaseModel):
+    enabled: Optional[bool] = Field(default=None, description="Enable shared links.")
+    sidebarWeb: Optional[bool] = Field(default=None, description="Show shared links in web sidebar.")
+
+
+class TagsPref(BaseModel):
+    enabled: Optional[bool] = Field(default=None, description="Enable tags.")
+    sidebarWeb: Optional[bool] = Field(default=None, description="Show tags in web sidebar.")
+
+
+class UserPreferences(BaseModel):
+    albums: Optional[AlbumsPref] = Field(default=None, description="Album preferences.")
+    avatar: Optional[AvatarPref] = Field(default=None, description="Avatar preferences.")
+    cast: Optional[CastPref] = Field(default=None, description="Cast/chromecast preferences.")
+    download: Optional[DownloadPref] = Field(default=None, description="Download preferences.")
+    emailNotifications: Optional[EmailNotificationsPref] = Field(default=None, description="Email notification preferences.")
+    folders: Optional[FoldersPref] = Field(default=None, description="Folder view preferences.")
+    memories: Optional[MemoriesPref] = Field(default=None, description="Memory feature preferences.")
+    people: Optional[PeoplePref] = Field(default=None, description="People/facial recognition preferences.")
+    purchase: Optional[PurchasePref] = Field(default=None, description="Purchase/license preferences.")
+    ratings: Optional[RatingsPref] = Field(default=None, description="Star rating preferences.")
+    sharedLinks: Optional[SharedLinksPref] = Field(default=None, description="Shared link preferences.")
+    tags: Optional[TagsPref] = Field(default=None, description="Tag preferences.")
+
 # =============================================================================
 # Server Tools
 # =============================================================================
@@ -394,8 +494,8 @@ include_all_fields: bool = False,
     """Get a single asset by its ID.
 
     Args:
-        id: The unique ID of the asset (required).
-        include_all_fields: When False (default), returns only commonly used fields. Set to True to retrieve all fields.
+        id: The unique ID of the asset.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_asset_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
@@ -414,7 +514,7 @@ async def get_asset_exif(
     """Get EXIF data for an asset.
 
     Args:
-        id: The unique ID of the asset (required).
+        id: The unique ID of the asset.
     """
     data = await get_client().get_asset_by_id(id, get_user_token(), include_all_fields=True)
     exif = data.get("exifInfo", {})
@@ -428,7 +528,7 @@ async def get_asset_ocr(
     """Get OCR data for an asset.
 
     Args:
-        id: The unique ID of the asset (required).
+        id: The unique ID of the asset.
     """
     data = await get_client().get_asset_ocr(id, get_user_token())
     return {"items": data} if isinstance(data, list) else data
@@ -441,7 +541,7 @@ async def get_asset_metadata(
     """Get metadata for an asset.
 
     Args:
-        id: The unique ID of the asset (required).
+        id: The unique ID of the asset.
     """
     data = await get_client().get_asset_metadata(id, get_user_token())
     return {"items": data} if isinstance(data, list) else data
@@ -455,8 +555,8 @@ async def get_asset_metadata_by_key(
     """Get specific metadata key for an asset.
 
     Args:
-        id: The unique ID of the asset (required).
-        key: The metadata key (required).
+        id: The unique ID of the asset.
+        key: The metadata key.
     """
     return await get_client().get_asset_metadata_by_key(id, key, get_user_token())
 
@@ -468,7 +568,7 @@ async def get_asset_edits(
     """Get edit history for an asset.
 
     Args:
-        id: The unique ID of the asset (required).
+        id: The unique ID of the asset.
     """
     return await get_client().get_asset_edits(id, get_user_token())
 
@@ -480,7 +580,7 @@ async def get_asset_thumbnail_url(
     """Get the URL to view an asset's thumbnail.
 
     Args:
-        id: The unique ID of the asset (required).
+        id: The unique ID of the asset.
     """
     url = await get_client().get_asset_thumbnail_url(id, get_user_token())
     return {"url": url}
@@ -493,7 +593,7 @@ async def get_asset_original_url(
     """Get the URL to download an asset's original file.
 
     Args:
-        id: The unique ID of the asset (required).
+        id: The unique ID of the asset.
     """
     url = await get_client().get_asset_original_url(id, get_user_token())
     return {"url": url}
@@ -506,7 +606,7 @@ async def get_asset_video_url(
     """Get the URL to play an asset's video.
 
     Args:
-        id: The unique ID of the asset (required).
+        id: The unique ID of the asset.
     """
     url = await get_client().get_asset_video_url(id, get_user_token())
     return {"url": url}
@@ -527,12 +627,12 @@ livePhotoVideoId: Optional[str] = None,
     """Update an asset's properties.
 
     Args:
-        id: The unique ID of the asset (required).
+        id: The unique ID of the asset.
         isFavorite: Mark as favorite.
         description: Asset description.
         latitude: Latitude coordinate.
         longitude: Longitude coordinate.
-        dateTimeOriginal: Use ISO 8601 format with explicit UTC offset (2026-06-22T15:00:00-04:00).
+        dateTimeOriginal: ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
         rating: Rating in range [1-5] (starred), -1 (rejected), or null (unrated).
         visibility: Asset visibility (PUBLIC, PRIVATE).
         livePhotoVideoId: Live photo video ID.
@@ -550,34 +650,34 @@ livePhotoVideoId: Optional[str] = None,
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def update_asset_edits(
     id: str,
+    edits: list[AssetEditItem],
     ctx: Context,
-    edits: str = "",
 ) -> dict[str, Any]:
     """Apply edits to an existing asset.
-    Note: Requires specific edit payload - see Immich API docs.
 
     Args:
-        id: The unique ID of the asset (required).
-        edits: JSON string of edits array (required).
+        id: The unique ID of the asset.
+        edits: List of edit operations to apply. Each item has an action
+            ('crop', 'rotate', or 'mirror') and corresponding parameters.
     """
-    payload = {"edits": json.loads(edits) if edits else []}
+    payload = {"edits": [e.model_dump() for e in edits]}
     return await get_client().update_asset_edits(id, payload, get_user_token())
 
 @mcp.tool(tags={"write", "advanced", "immich"})
 async def update_asset_metadata(
     id: str,
+    items: list[AssetMetadataEntry],
     ctx: Context,
-    metadata: str = "",
 ) -> dict[str, Any]:
     """Update metadata for an asset.
 
     Args:
-        id: The unique ID of the asset (required).
-        metadata: JSON string of metadata key/value pairs (required).
+        id: The unique ID of the asset.
+        items: List of metadata entries. Each entry has a key (string) and
+            value (arbitrary JSON object, e.g. {'someField': 'someValue'}).
     """
-    data = json.loads(metadata) if metadata else {}
-    items = [{"key": k, "value": {"val": v}} for k, v in data.items()]
-    result = await get_client().update_asset_metadata(id, {"items": items}, get_user_token())
+    payload = {"items": [{"key": i.key, "value": i.value} for i in items]}
+    result = await get_client().update_asset_metadata(id, payload, get_user_token())
     return {"results": result} if isinstance(result, list) else result
 
 @mcp.tool(tags={"write", "primary", "immich"})
@@ -589,7 +689,7 @@ force: bool = False,
     """Delete assets by IDs.
 
     Args:
-        ids: Comma-separated list of asset IDs to delete (required).
+        ids: Comma-separated list of asset IDs to delete.
         force: Force delete even if in trash.
     """
     id_list = [x.strip() for x in ids.split(",") if x.strip()]
@@ -615,12 +715,12 @@ timeZone: Optional[str] = None,
     """Update multiple assets at once.
 
     Args:
-        ids: Comma-separated list of asset IDs to update (required).
+        ids: Comma-separated list of asset IDs to update.
         isFavorite: Mark as favorite.
         description: Asset description.
         latitude: Latitude coordinate.
         longitude: Longitude coordinate.
-        dateTimeOriginal: Use ISO 8601 format with explicit UTC offset (2026-06-22T15:00:00-04:00).
+        dateTimeOriginal: ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
         rating: Rating in range [1-5], -1, or null.
         visibility: Asset visibility.
         duplicateId: Duplicate ID.
@@ -652,8 +752,8 @@ stack: bool = False,
     """Copy metadata from one asset to another.
 
     Args:
-        sourceId: Source asset ID (required).
-        targetId: Target asset ID (required).
+        sourceId: Source asset ID.
+        targetId: Target asset ID.
         albums: Copy album associations.
         favorite: Copy favorite status.
         sharedLinks: Copy shared links.
@@ -702,15 +802,14 @@ async def get_all_assets(
     Args:
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 100.
-        include_all_fields: When False (default), each asset contains only
-            commonly used fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
         type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
         isFavorite: Filter by favorite status.
         isMotion: Filter by motion photo.
         isOffline: Filter by offline status.
         isNotInAlbum: Filter assets not in any album.
-        takenAfter: Filter by taken date after. Use ISO 8601 format.
-        takenBefore: Filter by taken date before. Use ISO 8601 format.
+        takenAfter: Filter by taken date after. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        takenBefore: Filter by taken date before. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
         originalFileName: Filter by original file name.
         city: Filter by city name.
         state: Filter by state/province name.
@@ -763,11 +862,10 @@ async def get_assets_by_tag(
     """Get all assets that have a specific tag.
 
     Args:
-        tagId: The unique ID of the tag (required).
+        tagId: The unique ID of the tag.
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 100.
-        include_all_fields: When False (default), each asset contains only
-            commonly used fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_assets_by_tag(
         tagId, get_user_token(), page=page, size=size,
@@ -785,11 +883,10 @@ async def get_album_assets(
     """Get all assets in an album.
 
     Args:
-        albumId: The unique ID of the album (required).
+        albumId: The unique ID of the album.
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 100.
-        include_all_fields: When False (default), each asset contains only
-            commonly used fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_album_assets(
         albumId, get_user_token(), page=page, size=size,
@@ -805,9 +902,8 @@ async def get_memory_assets(
     """Get all assets in a memory.
 
     Args:
-        memoryId: The unique ID of the memory (required).
-        include_all_fields: When False (default), each asset contains only
-            commonly used fields. Set to True to include all fields.
+        memoryId: The unique ID of the memory.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     data = await get_client().get_memory_assets(
         memoryId, get_user_token(), include_all_fields=include_all_fields,
@@ -830,11 +926,11 @@ async def upload_asset(
     """Upload an asset from base64-encoded data.
 
     Args:
-        base64_data: Base64-encoded file data (required).
-        deviceAssetId: Unique asset ID for the device (required).
-        deviceId: Device identifier (required).
-        fileCreatedAt: File creation timestamp in ISO 8601 format (required).
-        fileModifiedAt: File modification timestamp in ISO 8601 format (required).
+        base64_data: Base64-encoded file data.
+        deviceAssetId: Unique asset ID for the device.
+        deviceId: Device identifier.
+        fileCreatedAt: File creation timestamp ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        fileModifiedAt: File modification timestamp ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
         filename: Original filename.
         duration: Duration in seconds (for video assets).
         isFavorite: Mark as favorite.
@@ -858,8 +954,7 @@ include_all_fields: bool = False,
     """List all albums.
 
     Args:
-        include_all_fields: When False (default), each album contains only
-            commonly used fields. Set to True to include all fields on
+        include_all_fields: Default False (common fields only). Set True for all fields.
             every album in the response.
     """
     data = await get_client().get_all_albums(
@@ -877,9 +972,8 @@ include_all_fields: bool = False,
     """Get a single album by ID.
 
     Args:
-        id: The unique ID of the album (required).
-        include_all_fields: When False (default), returns only commonly used
-            fields. Set to True to retrieve all available fields.
+        id: The unique ID of the album.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_album_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
@@ -896,7 +990,7 @@ assetIds: str = "",
     """Create a new album.
 
     Args:
-        albumName: Name of the album (required).
+        albumName: Name of the album.
         description: Description of the album.
         albumUsers: Comma-separated user IDs to share with.
         assetIds: Comma-separated asset IDs to add initially.
@@ -924,7 +1018,7 @@ order: Optional[str] = None,
     """Update an album.
 
     Args:
-        id: The unique ID of the album (required).
+        id: The unique ID of the album.
         albumName: New album name.
         description: New album description.
         albumThumbnailAssetId: Asset ID for the album thumbnail.
@@ -948,7 +1042,7 @@ async def delete_album_by_id(
     """Delete an album by ID.
 
     Args:
-        id: The unique ID of the album to delete (required).
+        id: The unique ID of the album to delete.
     """
     return await get_client().delete_album_by_id(id, get_user_token())
 
@@ -961,8 +1055,8 @@ async def add_assets_to_album(
     """Add assets to an album.
 
     Args:
-        id: The unique ID of the album (required).
-        assetIds: Comma-separated asset IDs (required).
+        id: The unique ID of the album.
+        assetIds: Comma-separated asset IDs.
     """
     id_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"ids": id_list}
@@ -978,8 +1072,8 @@ async def remove_assets_from_album(
     """Remove assets from an album.
 
     Args:
-        id: The unique ID of the album (required).
-        assetIds: Comma-separated asset IDs (required).
+        id: The unique ID of the album.
+        assetIds: Comma-separated asset IDs.
     """
     id_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"ids": id_list}
@@ -995,8 +1089,8 @@ async def share_album_with_users(
     """Share an album with other users.
 
     Args:
-        id: The unique ID of the album (required).
-        albumUsers: Comma-separated user IDs to share with (required).
+        id: The unique ID of the album.
+        albumUsers: Comma-separated user IDs to share with.
     """
     users_list = [{"userId": u.strip()} for u in albumUsers.split(",") if u.strip()]
     payload = {"albumUsers": users_list}
@@ -1011,8 +1105,8 @@ async def remove_user_from_album(
     """Remove a user from an album.
 
     Args:
-        id: The unique ID of the album (required).
-        userId: The user ID to remove (required).
+        id: The unique ID of the album.
+        userId: The user ID to remove.
     """
     return await get_client().remove_user_from_album(id, userId, get_user_token())
 
@@ -1029,7 +1123,7 @@ async def get_album_map_markers(
     """Get map markers for an album.
 
     Args:
-        id: The unique ID of the album (required).
+        id: The unique ID of the album.
     """
     data = await get_client().get_album_map_markers(id, get_user_token())
     return {"results": data} if isinstance(data, list) else data
@@ -1046,8 +1140,7 @@ include_all_fields: bool = False,
     """List all tags.
 
     Args:
-        include_all_fields: When False (default), each tag contains only
-            commonly used fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     data = await get_client().get_all_tags(
         get_user_token(),
@@ -1064,9 +1157,8 @@ include_all_fields: bool = False,
     """Get a single tag by ID.
 
     Args:
-        id: The unique ID of the tag (required).
-        include_all_fields: When False (default), returns only commonly used
-            fields. Set to True to retrieve all fields.
+        id: The unique ID of the tag.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_tag_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
@@ -1082,7 +1174,7 @@ parentId: str = "",
     """Create a new tag.
 
     Args:
-        name: Tag name (required).
+        name: Tag name.
         color: Tag color in hex format (e.g. #FF0000).
         parentId: Parent tag ID.
     """
@@ -1102,7 +1194,7 @@ color: Optional[str] = None,
     """Update a tag.
 
     Args:
-        id: The unique ID of the tag (required).
+        id: The unique ID of the tag.
         color: Tag color in hex format (e.g. #FF0000).
     """
     params = UpdateTagParam(color=color)
@@ -1118,7 +1210,7 @@ async def delete_tag_by_id(
     """Delete a tag by ID.
 
     Args:
-        id: The unique ID of the tag to delete (required).
+        id: The unique ID of the tag to delete.
     """
     return await get_client().delete_tag_by_id(id, get_user_token())
 
@@ -1130,7 +1222,7 @@ async def upsert_tags(
     """Upsert tags by name.
 
     Args:
-        tags: Comma-separated tag names to upsert (required).
+        tags: Comma-separated tag names to upsert.
     """
     tag_list = [t.strip() for t in tags.split(",") if t.strip()]
     payload = {"tags": tag_list}
@@ -1146,8 +1238,8 @@ async def tag_assets(
     """Tag assets with specified tags.
 
     Args:
-        assetIds: Comma-separated asset IDs (required).
-        tagIds: Comma-separated tag IDs (required).
+        assetIds: Comma-separated asset IDs.
+        tagIds: Comma-separated tag IDs.
     """
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     tag_list = [t.strip() for t in tagIds.split(",") if t.strip()]
@@ -1163,8 +1255,8 @@ async def tag_assets_by_tag(
     """Tag assets with a specific tag.
 
     Args:
-        id: The tag ID (required).
-        assetIds: Comma-separated asset IDs (required).
+        id: The tag ID.
+        assetIds: Comma-separated asset IDs.
     """
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"ids": asset_list}
@@ -1180,8 +1272,8 @@ async def untag_assets(
     """Remove a tag from assets.
 
     Args:
-        id: The tag ID (required).
-        assetIds: Comma-separated asset IDs (required).
+        id: The tag ID.
+        assetIds: Comma-separated asset IDs.
     """
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"ids": asset_list}
@@ -1200,8 +1292,7 @@ include_all_fields: bool = False,
     """List all people.
 
     Args:
-        include_all_fields: When False (default), each person contains only
-            commonly used fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     data = await get_client().get_all_people(
         get_user_token(),
@@ -1218,9 +1309,8 @@ include_all_fields: bool = False,
     """Get a single person by ID.
 
     Args:
-        id: The unique ID of the person (required).
-        include_all_fields: When False (default), returns only commonly used
-            fields. Set to True to retrieve all fields.
+        id: The unique ID of the person.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_person_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
@@ -1239,7 +1329,7 @@ isHidden: bool = False,
 
     Args:
         name: Person name.
-        birthDate: Person date of birth. Use ISO 8601 format with explicit UTC offset (2026-06-22T15:00:00-04:00).
+        birthDate: Person date of birth. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
         color: Person color in hex format.
         isFavorite: Mark as favorite.
         isHidden: Person visibility (hidden).
@@ -1266,9 +1356,9 @@ featureFaceAssetId: Optional[str] = None,
     """Update a person.
 
     Args:
-        id: The unique ID of the person (required).
+        id: The unique ID of the person.
         name: Person name.
-        birthDate: Person date of birth. Use ISO 8601 format with explicit UTC offset (2026-06-22T15:00:00-04:00).
+        birthDate: Person date of birth. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
         color: Person color in hex format.
         isFavorite: Mark as favorite.
         isHidden: Person visibility (hidden).
@@ -1291,7 +1381,7 @@ async def delete_person_by_id(
     """Delete a person by ID.
 
     Args:
-        id: The unique ID of the person to delete (required).
+        id: The unique ID of the person to delete.
     """
     return await get_client().delete_person_by_id(id, get_user_token())
 
@@ -1304,8 +1394,8 @@ async def merge_people(
     """Merge people into a single person.
 
     Args:
-        id: The target person ID to keep (required).
-        mergeIds: Comma-separated person IDs to merge into the target (required).
+        id: The target person ID to keep.
+        mergeIds: Comma-separated person IDs to merge into the target.
     """
     id_list = [i.strip() for i in mergeIds.split(",") if i.strip()]
     payload = {"ids": id_list}
@@ -1320,7 +1410,7 @@ async def get_person_statistics(
     """Get statistics for a person.
 
     Args:
-        id: The unique ID of the person (required).
+        id: The unique ID of the person.
     """
     return await get_client().get_person_statistics(id, get_user_token())
 
@@ -1332,7 +1422,7 @@ async def get_person_thumbnail_url(
     """Get the URL for a person's thumbnail image.
 
     Args:
-        id: The unique ID of the person (required).
+        id: The unique ID of the person.
     """
     url = await get_client().get_person_thumbnail_url(id, get_user_token())
     return {"url": url}
@@ -1345,7 +1435,7 @@ async def get_faces_by_asset(
     """Get faces detected in an asset.
 
     Args:
-        id: The unique ID of the asset (required).
+        id: The unique ID of the asset.
     """
     data = await get_client().get_faces_by_asset(id, get_user_token())
     return {"items": data} if isinstance(data, list) else data
@@ -1359,8 +1449,8 @@ async def reassign_face(
     """Reassign faces of an asset to a different person.
 
     Args:
-        assetId: The asset ID containing faces (required).
-        personId: The target person ID (required).
+        assetId: The asset ID containing faces.
+        personId: The target person ID.
     """
     payload = {"data": [{"assetId": assetId, "personId": personId}]}
     data = await get_client().reassign_faces(personId, payload, get_user_token())
@@ -1375,7 +1465,7 @@ async def delete_face(
     """Delete a face.
 
     Args:
-        id: The face ID to delete (required).
+        id: The face ID to delete.
         force: Force deletion even if person has other faces. Defaults to True.
     """
     payload = {"force": force}
@@ -1393,8 +1483,7 @@ include_all_fields: bool = False,
     """List all libraries.
 
     Args:
-        include_all_fields: When False (default), each library contains only
-            commonly used fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     data = await get_client().get_all_libraries(
         get_user_token(),
@@ -1411,9 +1500,8 @@ include_all_fields: bool = False,
     """Get a single library by ID.
 
     Args:
-        id: The unique ID of the library (required).
-        include_all_fields: When False (default), returns only commonly used
-            fields. Set to True to retrieve all fields.
+        id: The unique ID of the library.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_library_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
@@ -1430,7 +1518,7 @@ exclusionPatterns: str = "",
     """Create a new library.
 
     Args:
-        ownerId: Owner user ID (required).
+        ownerId: Owner user ID.
         name: Library name.
         importPaths: Comma-separated import paths.
         exclusionPatterns: Comma-separated exclusion patterns.
@@ -1456,7 +1544,7 @@ exclusionPatterns: Optional[str] = None,
     """Update a library.
 
     Args:
-        id: The unique ID of the library (required).
+        id: The unique ID of the library.
         name: Library name.
         importPaths: Comma-separated import paths.
         exclusionPatterns: Comma-separated exclusion patterns.
@@ -1477,7 +1565,7 @@ async def delete_library_by_id(
     """Delete a library by ID.
 
     Args:
-        id: The unique ID of the library to delete (required).
+        id: The unique ID of the library to delete.
     """
     return await get_client().delete_library_by_id(id, get_user_token())
 
@@ -1489,7 +1577,7 @@ async def scan_library(
     """Scan a library for new files.
 
     Args:
-        id: The unique ID of the library (required).
+        id: The unique ID of the library.
     """
     return await get_client().scan_library(id, get_user_token())
 
@@ -1501,7 +1589,7 @@ async def get_library_statistics(
     """Get statistics for a library.
 
     Args:
-        id: The unique ID of the library (required).
+        id: The unique ID of the library.
     """
     return await get_client().get_library_statistics(id, get_user_token())
 
@@ -1517,8 +1605,7 @@ include_all_fields: bool = False,
     """List all memories.
 
     Args:
-        include_all_fields: When False (default), each memory contains only
-            commonly used fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     data = await get_client().get_all_memories(
         get_user_token(),
@@ -1535,9 +1622,8 @@ include_all_fields: bool = False,
     """Get a single memory by ID.
 
     Args:
-        id: The unique ID of the memory (required).
-        include_all_fields: When False (default), returns only commonly used
-            fields. Set to True to retrieve all fields.
+        id: The unique ID of the memory.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_memory_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
@@ -1547,7 +1633,7 @@ include_all_fields: bool = False,
 async def create_memory(
 type: str,
 memoryAt: str,
-data: str,
+year: int,
 ctx: Context,
 assetIds: str = "",
 isSaved: bool = False,
@@ -1558,25 +1644,20 @@ seenAt: str = "",
     """Create a new memory.
 
     Args:
-        type: Memory type (on_this_day) (required).
-        memoryAt: Memory date. Use ISO 8601 format with explicit UTC offset (2026-06-22T15:00:00-04:00) (required).
-        data: JSON string with memory data (e.g. {"year": 2025, "year": "2025"}) (required).
+        type: Memory type (on_this_day).
+        memoryAt: Memory date. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        year: Year for the on_this_day memory.
         assetIds: Comma-separated asset IDs.
         isSaved: Save memory.
-        hideAt: Date when memory should be hidden. Use ISO 8601 format.
-        showAt: Date when memory should be shown. Use ISO 8601 format.
-        seenAt: Date when memory was seen. Use ISO 8601 format.
+        hideAt: Date when memory should be hidden. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        showAt: Date when memory should be shown. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        seenAt: Date when memory was seen. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
     """
-    import json as _json
-    try:
-        data_dict = _json.loads(data)
-    except _json.JSONDecodeError:
-        data_dict = {"year": data}
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()] if assetIds else []
     payload = {
         "type": type,
         "memoryAt": _normalize_datetime(memoryAt),
-        "data": data_dict,
+        "data": {"year": year},
     }
     if asset_list:
         payload["assetIds"] = asset_list
@@ -1601,10 +1682,10 @@ seenAt: Optional[str] = None,
     """Update a memory.
 
     Args:
-        id: The unique ID of the memory (required).
+        id: The unique ID of the memory.
         isSaved: Save memory.
-        memoryAt: Memory date. Use ISO 8601 format with explicit UTC offset (2026-06-22T15:00:00-04:00).
-        seenAt: Date when memory was seen. Use ISO 8601 format.
+        memoryAt: Memory date. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        seenAt: Date when memory was seen. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
     """
     params = UpdateMemoryParam(isSaved=isSaved, memoryAt=memoryAt, seenAt=seenAt)
     return await get_client().update_memory(
@@ -1619,7 +1700,7 @@ async def delete_memory_by_id(
     """Delete a memory by ID.
 
     Args:
-        id: The unique ID of the memory to delete (required).
+        id: The unique ID of the memory to delete.
     """
     return await get_client().delete_memory_by_id(id, get_user_token())
 
@@ -1632,8 +1713,8 @@ async def add_assets_to_memory(
     """Add assets to a memory.
 
     Args:
-        id: The unique ID of the memory (required).
-        assetIds: Comma-separated asset IDs (required).
+        id: The unique ID of the memory.
+        assetIds: Comma-separated asset IDs.
     """
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"ids": asset_list}
@@ -1649,8 +1730,8 @@ async def remove_assets_from_memory(
     """Remove assets from a memory.
 
     Args:
-        id: The unique ID of the memory (required).
-        assetIds: Comma-separated asset IDs to remove (required).
+        id: The unique ID of the memory.
+        assetIds: Comma-separated asset IDs to remove.
     """
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"ids": asset_list}
@@ -1674,8 +1755,7 @@ include_all_fields: bool = False,
     """List all stacks.
 
     Args:
-        include_all_fields: When False (default), each stack contains only
-            commonly used fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     data = await get_client().get_all_stacks(
         get_user_token(),
@@ -1692,9 +1772,8 @@ include_all_fields: bool = False,
     """Get a single stack by ID.
 
     Args:
-        id: The unique ID of the stack (required).
-        include_all_fields: When False (default), returns only commonly used
-            fields. Set to True to retrieve all fields.
+        id: The unique ID of the stack.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_stack_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
@@ -1723,7 +1802,7 @@ primaryAssetId: Optional[str] = None,
     """Update a stack.
 
     Args:
-        id: The unique ID of the stack (required).
+        id: The unique ID of the stack.
         primaryAssetId: Asset ID to set as primary.
     """
     params = UpdateStackParam(primaryAssetId=primaryAssetId)
@@ -1739,7 +1818,7 @@ async def delete_stack_by_id(
     """Delete a stack by ID.
 
     Args:
-        id: The unique ID of the stack to delete (required).
+        id: The unique ID of the stack to delete.
     """
     return await get_client().delete_stack_by_id(id, get_user_token())
 
@@ -1752,8 +1831,8 @@ async def remove_asset_from_stack(
     """Remove an asset from a stack.
 
     Args:
-        id: The unique ID of the stack (required).
-        assetId: The asset ID to remove (required).
+        id: The unique ID of the stack.
+        assetId: The asset ID to remove.
     """
     return await get_client().remove_asset_from_stack(id, assetId, get_user_token())
 
@@ -1769,8 +1848,7 @@ include_all_fields: bool = False,
     """List all shared links.
 
     Args:
-        include_all_fields: When False (default), each shared link contains
-            only commonly used fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     data = await get_client().get_all_shared_links(
         get_user_token(),
@@ -1787,9 +1865,8 @@ include_all_fields: bool = False,
     """Get a single shared link by ID.
 
     Args:
-        id: The unique ID of the shared link (required).
-        include_all_fields: When False (default), returns only commonly used
-            fields. Set to True to retrieve all fields.
+        id: The unique ID of the shared link.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_shared_link_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
@@ -1812,11 +1889,11 @@ slug: str = "",
     """Create a new shared link.
 
     Args:
-        type: Type of shared link (ALBUM or INDIVIDUAL) (required).
+        type: Type of shared link (ALBUM or INDIVIDUAL).
         assetIds: Comma-separated asset IDs (for INDIVIDUAL type).
         albumId: Album ID (for ALBUM type).
         description: Link description.
-        expiresAt: Expiration date. Use ISO 8601 format with explicit UTC offset.
+        expiresAt: Expiration date. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
         password: Link password.
         allowDownload: Allow downloads. Defaults to True.
         allowUpload: Allow uploads. Defaults to False.
@@ -1851,9 +1928,9 @@ slug: Optional[str] = None,
     """Update a shared link.
 
     Args:
-        id: The unique ID of the shared link (required).
+        id: The unique ID of the shared link.
         description: Link description.
-        expiresAt: Expiration date. Use ISO 8601 format.
+        expiresAt: Expiration date. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
         password: Link password.
         allowDownload: Allow downloads.
         allowUpload: Allow uploads.
@@ -1877,7 +1954,7 @@ async def delete_shared_link_by_id(
     """Delete a shared link by ID.
 
     Args:
-        id: The unique ID of the shared link to delete (required).
+        id: The unique ID of the shared link to delete.
     """
     return await get_client().delete_shared_link_by_id(id, get_user_token())
 
@@ -1890,8 +1967,8 @@ async def add_assets_to_shared_link(
     """Add assets to a shared link.
 
     Args:
-        id: The unique ID of the shared link (required).
-        assetIds: Comma-separated asset IDs to add (required).
+        id: The unique ID of the shared link.
+        assetIds: Comma-separated asset IDs to add.
     """
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"assetIds": asset_list}
@@ -1907,8 +1984,8 @@ async def remove_assets_from_shared_link(
     """Remove assets from a shared link.
 
     Args:
-        id: The unique ID of the shared link (required).
-        assetIds: Comma-separated asset IDs to remove (required).
+        id: The unique ID of the shared link.
+        assetIds: Comma-separated asset IDs to remove.
     """
     asset_list = [a.strip() for a in assetIds.split(",") if a.strip()]
     payload = {"assetIds": asset_list}
@@ -1935,8 +2012,7 @@ include_all_fields: bool = False,
         assetId: Filter by asset ID.
         type: Filter by reaction type (like, comment).
         level: Filter by reaction level.
-        include_all_fields: When False (default), returns only commonly used
-            fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     params = {}
     if albumId:
@@ -1963,7 +2039,7 @@ assetId: str = "",
     """Get activity statistics for an album.
 
     Args:
-        albumId: Album ID (required).
+        albumId: Album ID.
         assetId: Asset ID.
     """
     params = {"albumId": albumId}
@@ -1982,8 +2058,8 @@ comment: str = "",
     """Create an activity (like or comment).
 
     Args:
-        albumId: Album ID (required).
-        type: Activity type (like, comment) (required).
+        albumId: Album ID.
+        type: Activity type (like, comment).
         assetId: Asset ID (for per-asset activity).
         comment: Comment text (required if type is comment).
     """
@@ -2002,7 +2078,7 @@ async def delete_activity_by_id(
     """Delete an activity by ID.
 
     Args:
-        id: The unique ID of the activity to delete (required).
+        id: The unique ID of the activity to delete.
     """
     return await get_client().delete_activity_by_id(id, get_user_token())
 
@@ -2020,8 +2096,7 @@ include_all_fields: bool = False,
 
     Args:
         direction: Filter direction (shared-with or shared-by).
-        include_all_fields: When False (default), returns only commonly used
-            fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     params = {}
     if direction:
@@ -2041,7 +2116,7 @@ async def create_partner(
     """Add a partner to share libraries.
 
     Args:
-        sharedWithId: User ID to share with (required).
+        sharedWithId: User ID to share with.
     """
     params = CreatePartnerParam(sharedWithId=sharedWithId)
     return await get_client().create_partner(
@@ -2057,8 +2132,8 @@ async def update_partner(
     """Update a partner's timeline visibility.
 
     Args:
-        id: Partner (user) ID (required).
-        inTimeline: Show partner assets in timeline (required).
+        id: Partner (user) ID.
+        inTimeline: Show partner assets in timeline.
     """
     params = UpdatePartnerParam(inTimeline=inTimeline)
     return await get_client().update_partner(
@@ -2073,7 +2148,7 @@ async def delete_partner_by_id(
     """Remove a partner.
 
     Args:
-        id: Partner (user) ID to remove (required).
+        id: Partner (user) ID to remove.
     """
     return await get_client().delete_partner_by_id(id, get_user_token())
 
@@ -2113,15 +2188,15 @@ withStacked: bool = False,
 
     Args:
         page: Page number. Defaults to 1.
-        size: Number of results per page. Defaults to 100.
+        size: Number of results per page. Defaults to 50.
         query: General search query.
         type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
         isFavorite: Filter by favorite status.
         isMotion: Filter by motion photo.
         isOffline: Filter by offline status.
         isNotInAlbum: Filter assets not in any album.
-        takenAfter: Filter by taken date after. Use ISO 8601 format.
-        takenBefore: Filter by taken date before. Use ISO 8601 format.
+        takenAfter: Filter by taken date after. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        takenBefore: Filter by taken date before. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
         originalFileName: Filter by original file name.
         city: Filter by city name.
         state: Filter by state/province name.
@@ -2183,9 +2258,9 @@ libraryId: Optional[str] = None,
     """Search assets using natural language (CLIP-based smart search).
 
     Args:
-        query: Natural language search query (required).
+        query: Natural language search query.
         page: Page number. Defaults to 1.
-        size: Number of results per page. Defaults to 100.
+        size: Number of results per page. Defaults to 50.
         type: Asset type.
         isFavorite: Filter by favorite.
         city: Filter by city.
@@ -2221,8 +2296,8 @@ async def search_suggestions(
     """Get search suggestions.
 
     Args:
-        type: Suggestion type (country, state, city, camera-make, camera-model, camera-lens-model) (required).
-        query: Search query text (required).
+        type: Suggestion type (country, state, city, camera-make, camera-model, camera-lens-model).
+        query: Search query text.
     """
     params = {"type": type, "query": query}
     result = await get_client().search_suggestions(params, get_user_token())
@@ -2302,7 +2377,7 @@ async def search_person(
     """Search for people by name.
 
     Args:
-        name: Person name to search for (required).
+        name: Person name to search for.
         withHidden: Include hidden people.
     """
     params = {"name": name, "withHidden": withHidden}
@@ -2317,7 +2392,7 @@ async def search_places(
     """Search for places by name.
 
     Args:
-        name: Place name to search for (required).
+        name: Place name to search for.
     """
     params = {"name": name}
     result = await get_client().search_places(params, get_user_token())
@@ -2336,11 +2411,10 @@ async def get_people_assets(
     """List assets for specific people.
 
     Args:
-        personIds: Comma-separated person IDs (required).
+        personIds: Comma-separated person IDs.
         page: Page number. Defaults to 1.
         size: Number of results per page. Defaults to 100.
-        include_all_fields: When False (default), each asset contains only
-            commonly used fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
         type: Asset type (IMAGE, VIDEO, AUDIO, OTHER).
         isFavorite: Filter by favorite status.
     """
@@ -2369,7 +2443,7 @@ userId: str = "",
     """Get time buckets for timeline view.
 
     Args:
-        size: Bucket size (MONTH, DAY) (required).
+        size: Bucket size (MONTH, DAY).
         albumId: Filter by album.
         personId: Filter by person.
         userId: Filter by user.
@@ -2393,8 +2467,8 @@ userId: str = "",
     """Get assets in a specific time bucket.
 
     Args:
-        size: Bucket size (MONTH, DAY) (required).
-        timeBucket: The time bucket key from get_time_buckets (required).
+        size: Bucket size (MONTH, DAY).
+        timeBucket: The time bucket key from get_time_buckets.
         albumId: Filter by album.
         personId: Filter by person.
         userId: Filter by user.
@@ -2418,8 +2492,8 @@ withPartners: bool = False,
     """Get map markers for assets with geolocation data.
 
     Args:
-        fileCreatedAfter: Filter by file creation date after. Use ISO 8601 format.
-        fileCreatedBefore: Filter by file creation date before. Use ISO 8601 format.
+        fileCreatedAfter: Filter by file creation date after. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        fileCreatedBefore: Filter by file creation date before. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
         albumId: Filter by album ID.
         personId: Filter by person ID.
         withPartners: Include partner assets.
@@ -2442,8 +2516,8 @@ async def reverse_geocode(
     """Reverse geocode coordinates to a location.
 
     Args:
-        lat: Latitude (required).
-        lon: Longitude (required).
+        lat: Latitude.
+        lon: Longitude.
     """
     params = {"lat": lat, "lon": lon}
     result = await get_client().reverse_geocode(params, get_user_token())
@@ -2461,8 +2535,7 @@ include_all_fields: bool = False,
     """List all duplicate groups.
 
     Args:
-        include_all_fields: When False (default), each duplicate group
-            contains only commonly used fields. Set to True for full data.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     data = await get_client().get_all_duplicates(
         get_user_token(),
@@ -2478,7 +2551,7 @@ async def dismiss_duplicate_group(
     """Dismiss a duplicate group.
 
     Args:
-        id: Duplicate group ID to dismiss (required).
+        id: Duplicate group ID to dismiss.
     """
     return await get_client().dismiss_duplicate_group(id, get_user_token())
 
@@ -2504,7 +2577,7 @@ async def restore_trash_assets(
     """Restore specific trashed assets.
 
     Args:
-        ids: Comma-separated asset IDs to restore (required).
+        ids: Comma-separated asset IDs to restore.
     """
     id_list = [i.strip() for i in ids.split(",") if i.strip()]
     payload = {"ids": id_list}
@@ -2541,8 +2614,7 @@ include_all_fields: bool = False,
     """List all users.
 
     Args:
-        include_all_fields: When False (default), each user contains only
-            commonly used fields. Set to True to include all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     data = await get_client().get_all_users(
         get_user_token(),
@@ -2559,9 +2631,8 @@ include_all_fields: bool = False,
     """Get a single user by ID.
 
     Args:
-        id: The unique user ID (required).
-        include_all_fields: When False (default), returns only commonly used
-            fields. Set to True to retrieve all fields.
+        id: The unique user ID.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_user_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
@@ -2575,8 +2646,7 @@ include_all_fields: bool = False,
     """Get the current authenticated user's info.
 
     Args:
-        include_all_fields: When False (default), returns only commonly used
-            fields. Set to True to retrieve all fields.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     return await get_client().get_my_user_info(
         get_user_token(), include_all_fields=include_all_fields
@@ -2612,19 +2682,18 @@ async def get_my_preferences(ctx: Context) -> dict[str, Any]:
 
 @mcp.tool(tags={"write", "primary", "immich"})
 async def update_my_preferences(
-    preferences: str,
+    preferences: UserPreferences,
     ctx: Context
 ) -> dict[str, Any]:
     """Update the current user's preferences.
 
     Args:
-        preferences: JSON string of preference updates (required).
+        preferences: User preferences object. All top-level categories
+            (albums, avatar, cast, download, emailNotifications, folders,
+            memories, people, purchase, ratings, sharedLinks, tags) are
+            optional — only include the categories you want to update.
     """
-    import json as _json
-    try:
-        payload = _json.loads(preferences)
-    except _json.JSONDecodeError:
-        return {"error": "Invalid JSON preferences"}
+    payload = preferences.model_dump(exclude_unset=True, exclude_none=True)
     return await get_client().update_my_preferences(payload, get_user_token())
 
 @mcp.tool(tags={"read", "primary", "immich"})
@@ -2635,7 +2704,7 @@ async def get_user_profile_image_url(
     """Get the URL for a user's profile image.
 
     Args:
-        id: The user ID (required).
+        id: The user ID.
     """
     url = await get_client().get_user_profile_image_url(id, get_user_token())
     return {"url": url}
@@ -2657,9 +2726,9 @@ async def create_user(
     """Create a new user (admin only).
 
     Args:
-        email: User email address (required).
-        password: User password (required).
-        name: User display name (required).
+        email: User email address.
+        password: User password.
+        name: User display name.
         storageLabel: Optional storage label.
         quotaSizeInBytes: Optional quota in bytes.
     """
@@ -2682,7 +2751,7 @@ async def delete_user(
     """Delete a user by ID (admin only).
 
     Args:
-        id: The user ID to delete (required).
+        id: The user ID to delete.
     """
     return await get_client().delete_user(id, get_user_token())
 
