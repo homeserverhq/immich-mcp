@@ -562,7 +562,7 @@ livePhotoVideoId: Optional[str] = None,
         description: Asset description.
         latitude: Latitude coordinate.
         longitude: Longitude coordinate.
-        dateTimeOriginal: ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        dateTimeOriginal: ISO 8601 format (2026-06-22T15:00:00-04:00).
         rating: Rating in range [1-5] (starred), -1 (rejected), or null (unrated).
         visibility: Asset visibility (PUBLIC, PRIVATE).
         livePhotoVideoId: Live photo video ID.
@@ -650,7 +650,7 @@ timeZone: Optional[str] = None,
         description: Asset description.
         latitude: Latitude coordinate.
         longitude: Longitude coordinate.
-        dateTimeOriginal: ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        dateTimeOriginal: ISO 8601 format (2026-06-22T15:00:00-04:00).
         rating: Rating in range [1-5], -1, or null.
         visibility: Asset visibility.
         duplicateId: Duplicate ID.
@@ -738,8 +738,8 @@ async def get_all_assets(
         isMotion: Filter by motion photo.
         isOffline: Filter by offline status.
         isNotInAlbum: Filter assets not in any album.
-        takenAfter: Filter by taken date after. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
-        takenBefore: Filter by taken date before. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        takenAfter: Filter by taken date after. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        takenBefore: Filter by taken date before. ISO 8601 format (2026-06-22T15:00:00-04:00).
         originalFileName: Filter by original file name.
         city: Filter by city name.
         state: Filter by state/province name.
@@ -859,8 +859,8 @@ async def upload_asset(
         base64_data: Base64-encoded file data.
         deviceAssetId: Unique asset ID for the device.
         deviceId: Device identifier.
-        fileCreatedAt: File creation timestamp ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
-        fileModifiedAt: File modification timestamp ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        fileCreatedAt: File creation timestamp ISO 8601 format (2026-06-22T15:00:00-04:00).
+        fileModifiedAt: File modification timestamp ISO 8601 format (2026-06-22T15:00:00-04:00).
         filename: Original filename.
         duration: Duration in seconds (for video assets).
         isFavorite: Mark as favorite.
@@ -1259,7 +1259,7 @@ isHidden: bool = False,
 
     Args:
         name: Person name.
-        birthDate: Person date of birth. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        birthDate: Person date of birth. ISO 8601 format (2026-06-22T15:00:00-04:00).
         color: Person color in hex format.
         isFavorite: Mark as favorite.
         isHidden: Person visibility (hidden).
@@ -1288,7 +1288,7 @@ featureFaceAssetId: Optional[str] = None,
     Args:
         id: The unique ID of the person.
         name: Person name.
-        birthDate: Person date of birth. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        birthDate: Person date of birth. ISO 8601 format (2026-06-22T15:00:00-04:00).
         color: Person color in hex format.
         isFavorite: Mark as favorite.
         isHidden: Person visibility (hidden).
@@ -1612,8 +1612,8 @@ seenAt: Optional[str] = None,
     Args:
         id: The unique ID of the memory.
         isSaved: Save memory.
-        memoryAt: Memory date. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
-        seenAt: Date when memory was seen. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        memoryAt: Memory date. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        seenAt: Date when memory was seen. ISO 8601 format (2026-06-22T15:00:00-04:00).
     """
     params = UpdateMemoryParam(isSaved=isSaved, memoryAt=memoryAt, seenAt=seenAt)
     return await get_client().update_memory(
@@ -1821,7 +1821,7 @@ slug: str = "",
         assetIds: Comma-separated asset IDs (for INDIVIDUAL type).
         albumId: Album ID (for ALBUM type).
         description: Link description.
-        expiresAt: Expiration date. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        expiresAt: Expiration date. ISO 8601 format (2026-06-22T15:00:00-04:00).
         password: Link password.
         allowDownload: Allow downloads. Defaults to True.
         allowUpload: Allow uploads. Defaults to False.
@@ -1858,7 +1858,7 @@ slug: Optional[str] = None,
     Args:
         id: The unique ID of the shared link.
         description: Link description.
-        expiresAt: Expiration date. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        expiresAt: Expiration date. ISO 8601 format (2026-06-22T15:00:00-04:00).
         password: Link password.
         allowDownload: Allow downloads.
         allowUpload: Allow uploads.
@@ -2123,8 +2123,8 @@ withStacked: bool = False,
         isMotion: Filter by motion photo.
         isOffline: Filter by offline status.
         isNotInAlbum: Filter assets not in any album.
-        takenAfter: Filter by taken date after. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
-        takenBefore: Filter by taken date before. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        takenAfter: Filter by taken date after. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        takenBefore: Filter by taken date before. ISO 8601 format (2026-06-22T15:00:00-04:00).
         originalFileName: Filter by original file name.
         city: Filter by city name.
         state: Filter by state/province name.
@@ -2424,8 +2424,8 @@ withPartners: bool = False,
     """Get map markers for assets with geolocation data.
 
     Args:
-        fileCreatedAfter: Filter by file creation date after. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
-        fileCreatedBefore: Filter by file creation date before. ISO 8601 format (2026-06-22T15:00:00-04:00). (2026-06-22T15:00:00-04:00).
+        fileCreatedAfter: Filter by file creation date after. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        fileCreatedBefore: Filter by file creation date before. ISO 8601 format (2026-06-22T15:00:00-04:00).
         albumId: Filter by album ID.
         personId: Filter by person ID.
         withPartners: Include partner assets.
