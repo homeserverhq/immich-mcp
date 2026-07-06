@@ -100,9 +100,9 @@ The server implements 130 MCP tools organized into the following categories:
 - `bulk_update_assets` — Update multiple assets
 - `copy_asset` — Copy asset metadata
 - `upload_asset` — Upload an asset from base64 data
-- `list_assets_by_tag` — Get all assets that have a specific tag
-- `list_assets_by_album` — Get all assets in an album
-- `list_assets_by_memory` — Get all assets in a memory
+- `list_assets_by_tag` — List assets that have a specific tag
+- `list_assets_by_album` — List all assets in an album
+- `list_assets_by_memory` — List all assets in a memory
 - `list_assets_by_people` — List assets for specific people
 
 ### 💿 Album Management (11 tools)
