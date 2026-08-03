@@ -930,4 +930,4 @@ class ImmichClient:
         return data
 
     async def delete_user(self, user_id: str, api_key: Optional[str] = None) -> Any:
-        return await self.delete(f"/admin/users/{user_id}", api_key)
+        return await self.request("DELETE", f"/admin/users/{user_id}", api_key, json={})

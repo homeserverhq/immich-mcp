@@ -5,6 +5,7 @@ from contextvars import ContextVar
 from typing import Any, Optional, Union
 
 from fastmcp import FastMCP, Context
+from mcp.types import ToolAnnotations
 from pydantic import BaseModel, Field
 from toon_mcp import json_to_toon
 
@@ -51,7 +52,7 @@ def _normalize_datetime(value: str) -> str:
     if re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$', value):
         parsed = dt.datetime.fromisoformat(value)
         parsed = parsed.astimezone(dt.timezone.utc)
-        return parsed.strftime('%Y-%m-%d %H:%M:%S')
+        return parsed.strftime('%Y-%m-%dT%H:%M:%S') + 'Z'
     if re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}', value):
         raise ValueError("Timezone offset required. Use 2026-06-22T15:00:00-04:00")
     return value
@@ -355,59 +356,70 @@ class AssetEditItem(BaseModel):
 # =============================================================================
 # Server Tools
 # =============================================================================
-
-@mcp.tool()
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Server Ping", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_server_ping(ctx: Context) -> dict[str, Any]:
     """Check if the Immich server is reachable."""
     return await get_client().get_server_ping(get_user_token())
-
-@mcp.tool(tags={"read"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Server Version", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_server_version(ctx: Context) -> dict[str, Any]:
     """Get the Immich server version."""
     return await get_client().get_server_version(get_user_token())
-
-@mcp.tool(tags={"immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Server About", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_server_about(ctx: Context) -> dict[str, Any]:
     """Get general server information."""
     return await get_client().get_server_about(get_user_token())
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Server Config", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_server_config(ctx: Context) -> dict[str, Any]:
     """Get the server configuration settings."""
     return await get_client().get_server_config(get_user_token())
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Server Features", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_server_features(ctx: Context) -> dict[str, Any]:
     """Get the server feature flags."""
     return await get_client().get_server_features(get_user_token())
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Server Statistics", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_server_statistics(ctx: Context) -> dict[str, Any]:
     """Get server usage statistics."""
     return await get_client().get_server_statistics(get_user_token())
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Server Storage", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_server_storage(ctx: Context) -> dict[str, Any]:
     """Get server storage information."""
     return await get_client().get_server_storage(get_user_token())
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Server Media Types", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_server_media_types(ctx: Context) -> dict[str, Any]:
     """Get supported media types."""
     return await get_client().get_server_media_types(get_user_token())
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Server Version Check", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_server_version_check(ctx: Context) -> dict[str, Any]:
     """Get version check status."""
     return await get_client().get_server_version_check(get_user_token())
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="List Server Version History", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_server_version_history(ctx: Context) -> dict[str, Any]:
     """Get version history."""
     result = await get_client().get_server_version_history(get_user_token())
     return {"results": result} if isinstance(result, list) else result
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Server Apk Links", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_server_apk_links(ctx: Context) -> dict[str, Any]:
     """Get APK download links."""
     return     await get_client().get_server_apk_links(get_user_token())
@@ -415,8 +427,9 @@ async def get_server_apk_links(ctx: Context) -> dict[str, Any]:
 # =============================================================================
 # Asset Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Asset By Id", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_asset_by_id(
 id: str,
 ctx: Context,
@@ -431,13 +444,15 @@ include_all_fields: bool = False,
     return await get_client().get_asset_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
     )
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Asset Statistics", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_asset_statistics(ctx: Context) -> dict[str, Any]:
     """Get asset statistics (total count, image/video counts)."""
     return await get_client().get_asset_statistics(get_user_token())
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Asset Exif", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_asset_exif(
     id: str,
     ctx: Context
@@ -450,8 +465,9 @@ async def get_asset_exif(
     data = await get_client().get_asset_by_id(id, get_user_token(), include_all_fields=True)
     exif = data.get("exifInfo", {})
     return {"exifInfo": exif}
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="List Asset Ocr", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_asset_ocr(
     id: str,
     ctx: Context
@@ -463,8 +479,9 @@ async def list_asset_ocr(
     """
     data = await get_client().get_asset_ocr(id, get_user_token())
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="List Asset Metadata", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_asset_metadata(
     id: str,
     ctx: Context
@@ -476,8 +493,9 @@ async def list_asset_metadata(
     """
     data = await get_client().get_asset_metadata(id, get_user_token())
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Asset Metadata By Key", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_asset_metadata_by_key(
     id: str,
     key: str,
@@ -490,8 +508,9 @@ async def get_asset_metadata_by_key(
         key: The metadata key.
     """
     return await get_client().get_asset_metadata_by_key(id, key, get_user_token())
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="List Asset Edits", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_asset_edits(
     id: str,
     ctx: Context
@@ -502,8 +521,9 @@ async def list_asset_edits(
         id: The unique ID of the asset.
     """
     return await get_client().get_asset_edits(id, get_user_token())
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Asset Thumbnail Url", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_asset_thumbnail_url(
     id: str,
     ctx: Context
@@ -515,8 +535,9 @@ async def get_asset_thumbnail_url(
     """
     url = await get_client().get_asset_thumbnail_url(id, get_user_token())
     return {"url": url}
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Asset Original Url", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_asset_original_url(
     id: str,
     ctx: Context
@@ -528,8 +549,9 @@ async def get_asset_original_url(
     """
     url = await get_client().get_asset_original_url(id, get_user_token())
     return {"url": url}
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Asset Video Url", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_asset_video_url(
     id: str,
     ctx: Context
@@ -541,8 +563,9 @@ async def get_asset_video_url(
     """
     url = await get_client().get_asset_video_url(id, get_user_token())
     return {"url": url}
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Update Asset", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_asset(
 id: str,
 ctx: Context,
@@ -577,8 +600,9 @@ livePhotoVideoId: Optional[str] = None,
     return await get_client().update_asset(
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Update Asset Edits", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_asset_edits(
     id: str,
     edits: list[AssetEditItem],
@@ -593,8 +617,9 @@ async def update_asset_edits(
     """
     payload = {"edits": [e.model_dump() for e in edits]}
     return await get_client().update_asset_edits(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Update Asset Metadata", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_asset_metadata(
     id: str,
     items: list[AssetMetadataEntry],
@@ -610,8 +635,9 @@ async def update_asset_metadata(
     payload = {"items": [{"key": i.key, "value": i.value} for i in items]}
     result = await get_client().update_asset_metadata(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"results": result} if isinstance(result, list) else result
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Delete Assets", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_assets(
 ids: list[str],
 ctx: Context,
@@ -627,8 +653,9 @@ force: bool = False,
     if force:
         payload["force"] = True
     return await get_client().delete_assets(payload, get_user_token())
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Bulk Update Assets", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def bulk_update_assets(
 ids: list[str],
 ctx: Context,
@@ -666,8 +693,9 @@ timeZone: Optional[str] = None,
     return await get_client().bulk_update_assets(
         params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Copy Asset", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def copy_asset(
 sourceId: str,
 targetId: str,
@@ -697,8 +725,9 @@ stack: bool = False,
     return await get_client().copy_asset(
         params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="List All Assets", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_assets(
     ctx: Context,
     page: int = 1,
@@ -779,8 +808,9 @@ async def list_all_assets(
     return await get_client().search_metadata(
         payload, get_user_token(), include_all_fields=include_all_fields
     )
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Assets By Tag", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_assets_by_tag(
     tagId: str,
     ctx: Context,
@@ -800,8 +830,9 @@ async def list_assets_by_tag(
         tagId, get_user_token(), page=page, size=size,
         include_all_fields=include_all_fields,
     )
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Assets By Album", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_assets_by_album(
     albumId: str,
     ctx: Context,
@@ -821,8 +852,9 @@ async def list_assets_by_album(
         albumId, get_user_token(), page=page, size=size,
         include_all_fields=include_all_fields,
     )
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Assets By Memory", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_assets_by_memory(
     memoryId: str,
     ctx: Context,
@@ -838,8 +870,9 @@ async def list_assets_by_memory(
         memoryId, get_user_token(), include_all_fields=include_all_fields,
     )
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"write", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Upload Asset", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def upload_asset(
     base64_data: str,
     deviceAssetId: str,
@@ -874,8 +907,9 @@ async def upload_asset(
 # =============================================================================
 # Album Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="List All Albums", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_albums(
 ctx: Context,
 include_all_fields: bool = False,
@@ -890,8 +924,9 @@ include_all_fields: bool = False,
         include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
     return {"items": json_to_toon(data)}
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Album By Id", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_album_by_id(
 id: str,
 ctx: Context,
@@ -906,8 +941,9 @@ include_all_fields: bool = False,
     return await get_client().get_album_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
     )
-
-@mcp.tool(tags={"write", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Create Album", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def create_album(
 albumName: str,
 ctx: Context,
@@ -931,8 +967,9 @@ assetIds: list[str] = [],
     if assetIds:
         payload["assetIds"] = assetIds
     return await get_client().create_album(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Update Album", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_album(
 id: str,
 ctx: Context,
@@ -960,8 +997,9 @@ order: Optional[str] = None,
     return await get_client().update_album(
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Delete Album By Id", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_album_by_id(
     id: str,
     ctx: Context
@@ -972,8 +1010,9 @@ async def delete_album_by_id(
         id: The unique ID of the album to delete.
     """
     return await get_client().delete_album_by_id(id, get_user_token())
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Add Assets To Album", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def add_assets_to_album(
     id: str,
     assetIds: list[str],
@@ -988,8 +1027,9 @@ async def add_assets_to_album(
     payload = {"ids": assetIds}
     data = await get_client().add_assets_to_album(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Remove Assets From Album", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def remove_assets_from_album(
     id: str,
     assetIds: list[str],
@@ -1004,8 +1044,9 @@ async def remove_assets_from_album(
     payload = {"ids": assetIds}
     data = await get_client().remove_assets_from_album(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Share Album With Users", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def share_album_with_users(
     id: str,
     albumUsers: list[str],
@@ -1020,8 +1061,9 @@ async def share_album_with_users(
     users_list = [{"userId": u} for u in albumUsers]
     payload = {"albumUsers": users_list}
     return await get_client().add_users_to_album(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Remove User From Album", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def remove_user_from_album(
     id: str,
     userId: str,
@@ -1034,13 +1076,15 @@ async def remove_user_from_album(
         userId: The user ID to remove.
     """
     return await get_client().remove_user_from_album(id, userId, get_user_token())
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Album Statistics", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_album_statistics(ctx: Context) -> dict[str, Any]:
     """Get album statistics."""
     return await get_client().get_album_statistics(get_user_token())
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Album Map Markers", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_album_map_markers(
     id: str,
     ctx: Context
@@ -1056,8 +1100,9 @@ async def list_album_map_markers(
 # =============================================================================
 # Tag Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="List All Tags", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_tags(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1072,8 +1117,9 @@ include_all_fields: bool = False,
         include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
     return {"items": json_to_toon(data)}
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Tag By Id", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_tag_by_id(
 id: str,
 ctx: Context,
@@ -1088,8 +1134,9 @@ include_all_fields: bool = False,
     return await get_client().get_tag_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
     )
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Create Tag", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def create_tag(
 name: str,
 ctx: Context,
@@ -1109,8 +1156,9 @@ parentId: str = "",
     if parentId:
         payload["parentId"] = parentId
     return await get_client().create_tag(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Update Tag", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_tag(
 id: str,
 ctx: Context,
@@ -1126,8 +1174,9 @@ color: Optional[str] = None,
     return await get_client().update_tag(
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Delete Tag By Id", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_tag_by_id(
     id: str,
     ctx: Context
@@ -1138,8 +1187,9 @@ async def delete_tag_by_id(
         id: The unique ID of the tag to delete.
     """
     return await get_client().delete_tag_by_id(id, get_user_token())
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Upsert Tags", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def upsert_tags(
     tags: list[str],
     ctx: Context
@@ -1152,8 +1202,9 @@ async def upsert_tags(
     payload = {"tags": tags}
     data = await get_client().upsert_tags(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Tag Assets", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def tag_assets(
     assetIds: list[str],
     tagIds: list[str],
@@ -1167,8 +1218,9 @@ async def tag_assets(
     """
     payload = {"assetIds": assetIds, "tagIds": tagIds}
     return await get_client().tag_assets(payload, get_user_token())
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Tag Assets By Tag", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def tag_assets_by_tag(
     id: str,
     assetIds: list[str],
@@ -1183,8 +1235,9 @@ async def tag_assets_by_tag(
     payload = {"ids": assetIds}
     data = await get_client().tag_assets_by_tag(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Untag Assets", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def untag_assets(
     id: str,
     assetIds: list[str],
@@ -1203,8 +1256,9 @@ async def untag_assets(
 # =============================================================================
 # People / Faces Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="List All People", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_people(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1219,8 +1273,9 @@ include_all_fields: bool = False,
         include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
     return {"items": json_to_toon(data)}
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Person By Id", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_person_by_id(
 id: str,
 ctx: Context,
@@ -1235,8 +1290,9 @@ include_all_fields: bool = False,
     return await get_client().get_person_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
     )
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Create Person", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def create_person(
 ctx: Context,
 name: str = "",
@@ -1258,11 +1314,14 @@ isHidden: bool = False,
         name=name, birthDate=birthDate, color=color,
         isFavorite=isFavorite, isHidden=isHidden,
     )
+    payload = params.model_dump(exclude_unset=True, exclude_none=True)
+    payload = {k: v for k, v in payload.items() if v not in ("", [])}
     return await get_client().create_person(
-        params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
+        payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Update Person", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_person(
 id: str,
 ctx: Context,
@@ -1292,8 +1351,9 @@ featureFaceAssetId: Optional[str] = None,
     return await get_client().update_person(
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Delete Person By Id", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_person_by_id(
     id: str,
     ctx: Context
@@ -1304,8 +1364,9 @@ async def delete_person_by_id(
         id: The unique ID of the person to delete.
     """
     return await get_client().delete_person_by_id(id, get_user_token())
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Merge People", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def merge_people(
     id: str,
     mergeIds: list[str],
@@ -1320,8 +1381,9 @@ async def merge_people(
     payload = {"ids": mergeIds}
     data = await get_client().merge_people(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Person Statistics", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_person_statistics(
     id: str,
     ctx: Context
@@ -1332,8 +1394,9 @@ async def get_person_statistics(
         id: The unique ID of the person.
     """
     return await get_client().get_person_statistics(id, get_user_token())
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Person Thumbnail Url", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_person_thumbnail_url(
     id: str,
     ctx: Context
@@ -1345,8 +1408,9 @@ async def get_person_thumbnail_url(
     """
     url = await get_client().get_person_thumbnail_url(id, get_user_token())
     return {"url": url}
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Faces By Asset", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_faces_by_asset(
     id: str,
     ctx: Context
@@ -1358,8 +1422,9 @@ async def list_faces_by_asset(
     """
     data = await get_client().get_faces_by_asset(id, get_user_token())
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Reassign Face", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def reassign_face(
     assetId: str,
     personId: str,
@@ -1374,8 +1439,9 @@ async def reassign_face(
     payload = {"data": [{"assetId": assetId, "personId": personId}]}
     data = await get_client().reassign_faces(personId, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"results": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Delete Face", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_face(
     id: str,
     ctx: Context,
@@ -1393,8 +1459,9 @@ async def delete_face(
 # =============================================================================
 # Library Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="List All Libraries", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_libraries(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1409,8 +1476,9 @@ include_all_fields: bool = False,
         include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
     return {"items": json_to_toon(data)}
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Library By Id", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_library_by_id(
 id: str,
 ctx: Context,
@@ -1425,8 +1493,9 @@ include_all_fields: bool = False,
     return await get_client().get_library_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
     )
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Create Library", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def create_library(
 ownerId: str,
 ctx: Context,
@@ -1449,8 +1518,9 @@ exclusionPatterns: list[str] = [],
     if exclusionPatterns:
         payload["exclusionPatterns"] = exclusionPatterns
     return await get_client().create_library(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Update Library", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_library(
 id: str,
 ctx: Context,
@@ -1473,8 +1543,9 @@ exclusionPatterns: Optional[list[str]] = None,
     if exclusionPatterns is not None:
         payload["exclusionPatterns"] = exclusionPatterns
     return await get_client().update_library(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Delete Library By Id", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_library_by_id(
     id: str,
     ctx: Context
@@ -1485,8 +1556,9 @@ async def delete_library_by_id(
         id: The unique ID of the library to delete.
     """
     return await get_client().delete_library_by_id(id, get_user_token())
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Scan Library", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def scan_library(
     id: str,
     ctx: Context
@@ -1497,8 +1569,9 @@ async def scan_library(
         id: The unique ID of the library.
     """
     return await get_client().scan_library(id, get_user_token())
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Library Statistics", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_library_statistics(
     id: str,
     ctx: Context
@@ -1513,8 +1586,9 @@ async def get_library_statistics(
 # =============================================================================
 # Memory Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List All Memories", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_memories(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1529,8 +1603,9 @@ include_all_fields: bool = False,
         include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
     return {"items": json_to_toon(data)}
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Memory By Id", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_memory_by_id(
 id: str,
 ctx: Context,
@@ -1545,8 +1620,9 @@ include_all_fields: bool = False,
     return await get_client().get_memory_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
     )
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Create Memory", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def create_memory(
 memoryAt: str,
 year: int,
@@ -1584,8 +1660,9 @@ seenAt: str = "",
     if seenAt:
         payload["seenAt"] = _normalize_datetime(seenAt)
     return await get_client().create_memory(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Update Memory", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_memory(
 id: str,
 ctx: Context,
@@ -1605,8 +1682,9 @@ seenAt: Optional[str] = None,
     return await get_client().update_memory(
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Delete Memory By Id", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_memory_by_id(
     id: str,
     ctx: Context
@@ -1617,8 +1695,9 @@ async def delete_memory_by_id(
         id: The unique ID of the memory to delete.
     """
     return await get_client().delete_memory_by_id(id, get_user_token())
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Add Assets To Memory", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def add_assets_to_memory(
     id: str,
     assetIds: list[str],
@@ -1633,8 +1712,9 @@ async def add_assets_to_memory(
     payload = {"ids": assetIds}
     data = await get_client().add_assets_to_memory(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Remove Assets From Memory", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def remove_assets_from_memory(
     id: str,
     assetIds: list[str],
@@ -1649,8 +1729,9 @@ async def remove_assets_from_memory(
     payload = {"ids": assetIds}
     data = await get_client().remove_assets_from_memory(id, payload, get_user_token())
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Memory Statistics", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_memory_statistics(ctx: Context) -> dict[str, Any]:
     """Get memory statistics."""
     return await get_client().get_memory_statistics(get_user_token())
@@ -1658,8 +1739,9 @@ async def get_memory_statistics(ctx: Context) -> dict[str, Any]:
 # =============================================================================
 # Stack Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="List All Stacks", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_stacks(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1674,8 +1756,9 @@ include_all_fields: bool = False,
         include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
     return {"items": json_to_toon(data)}
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Stack By Id", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_stack_by_id(
 id: str,
 ctx: Context,
@@ -1690,8 +1773,9 @@ include_all_fields: bool = False,
     return await get_client().get_stack_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
     )
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Create Stack", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def create_stack(
     assetIds: list[str],
     ctx: Context
@@ -1703,8 +1787,9 @@ async def create_stack(
     """
     payload = {"assetIds": assetIds}
     return await get_client().create_stack(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Update Stack", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_stack(
 id: str,
 ctx: Context,
@@ -1720,8 +1805,9 @@ primaryAssetId: Optional[str] = None,
     return await get_client().update_stack(
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Delete Stack By Id", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_stack_by_id(
     id: str,
     ctx: Context
@@ -1732,8 +1818,9 @@ async def delete_stack_by_id(
         id: The unique ID of the stack to delete.
     """
     return await get_client().delete_stack_by_id(id, get_user_token())
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Remove Asset From Stack", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def remove_asset_from_stack(
     id: str,
     assetId: str,
@@ -1750,8 +1837,9 @@ async def remove_asset_from_stack(
 # =============================================================================
 # Shared Link Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List All Shared Links", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_shared_links(
 ctx: Context,
 include_all_fields: bool = False,
@@ -1766,8 +1854,9 @@ include_all_fields: bool = False,
         include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
     return {"items": json_to_toon(data)}
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Shared Link By Id", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_shared_link_by_id(
 id: str,
 ctx: Context,
@@ -1782,8 +1871,9 @@ include_all_fields: bool = False,
     return await get_client().get_shared_link_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
     )
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Create Shared Link", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def create_shared_link(
 type: str,
 ctx: Context,
@@ -1823,8 +1913,9 @@ slug: str = "",
     if albumId:
         payload["albumId"] = albumId
     return await get_client().create_shared_link(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Update Shared Link", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_shared_link(
 id: str,
 ctx: Context,
@@ -1856,8 +1947,9 @@ slug: Optional[str] = None,
     return await get_client().update_shared_link(
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Delete Shared Link By Id", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_shared_link_by_id(
     id: str,
     ctx: Context
@@ -1868,8 +1960,9 @@ async def delete_shared_link_by_id(
         id: The unique ID of the shared link to delete.
     """
     return await get_client().delete_shared_link_by_id(id, get_user_token())
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Add Assets To Shared Link", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def add_assets_to_shared_link(
     id: str,
     assetIds: list[str],
@@ -1884,8 +1977,9 @@ async def add_assets_to_shared_link(
     payload = {"assetIds": assetIds}
     data = await get_client().add_assets_to_shared_link(id, payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
     return {"items": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Remove Assets From Shared Link", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def remove_assets_from_shared_link(
     id: str,
     assetIds: list[str],
@@ -1904,8 +1998,9 @@ async def remove_assets_from_shared_link(
 # =============================================================================
 # Activity Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List All Activities", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_activities(
 ctx: Context,
 albumId: str = "",
@@ -1938,8 +2033,9 @@ include_all_fields: bool = False,
         params=params or None,
     )
     return {"items": json_to_toon(data)} if isinstance(data, list) else data
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Activity Statistics", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_activity_statistics(
 albumId: str,
 ctx: Context,
@@ -1955,8 +2051,9 @@ assetId: str = "",
     if assetId:
         params["assetId"] = assetId
     return await get_client().get_activity_statistics(get_user_token(), params=params)
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Create Activity", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def create_activity(
 albumId: str,
 type: str,
@@ -1978,8 +2075,9 @@ comment: str = "",
     if comment:
         payload["comment"] = comment
     return await get_client().create_activity(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Delete Activity By Id", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_activity_by_id(
     id: str,
     ctx: Context
@@ -1994,8 +2092,9 @@ async def delete_activity_by_id(
 # =============================================================================
 # Partner Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List All Partners", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_partners(
 ctx: Context,
 direction: str = "",
@@ -2016,8 +2115,9 @@ include_all_fields: bool = False,
         params=params or None,
     )
     return {"items": json_to_toon(data)}
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Create Partner", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def create_partner(
     sharedWithId: str,
     ctx: Context
@@ -2031,8 +2131,9 @@ async def create_partner(
     return await get_client().create_partner(
         params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Update Partner", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_partner(
     id: str,
     inTimeline: bool,
@@ -2048,8 +2149,9 @@ async def update_partner(
     return await get_client().update_partner(
         id, params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Delete Partner By Id", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_partner_by_id(
     id: str,
     ctx: Context
@@ -2064,8 +2166,9 @@ async def delete_partner_by_id(
 # =============================================================================
 # Search Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Search Metadata", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def search_metadata(
 ctx: Context,
 page: int = 1,
@@ -2145,8 +2248,9 @@ model: Optional[str] = None,
     if withPeople: payload["withPeople"] = True
     if withStacked: payload["withStacked"] = True
     return await get_client().search_metadata(payload, get_user_token())
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Search Smart", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def search_smart(
 query: str,
 ctx: Context,
@@ -2197,8 +2301,9 @@ model: Optional[str] = None,
     if albumIds: payload["albumIds"] = albumIds
     if libraryId: payload["libraryId"] = libraryId
     return await get_client().search_smart(payload, get_user_token(), include_all_fields=include_all_fields)
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Search Suggestions", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def search_suggestions(
     type: str,
     query: str,
@@ -2213,20 +2318,23 @@ async def search_suggestions(
     params = {"type": type, "query": query}
     result = await get_client().search_suggestions(params, get_user_token())
     return {"results": result} if isinstance(result, list) else result
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Search Explore", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def search_explore(ctx: Context) -> dict[str, Any]:
     """Get explore data grouped by city."""
     result = await get_client().search_explore(get_user_token())
     return {"results": result} if isinstance(result, list) else result
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Search Cities", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def search_cities(ctx: Context) -> dict[str, Any]:
     """Get assets grouped by city."""
     result = await get_client().search_cities(get_user_token())
     return {"results": result} if isinstance(result, list) else result
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Search Random", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def search_random(
     ctx: Context,
     size: int = 100,
@@ -2280,8 +2388,9 @@ async def search_random(
     if model: payload["model"] = model
     data = await get_client().search_random(payload, get_user_token(), include_all_fields=include_all_fields)
     return {"results": data} if isinstance(data, list) else data
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Search Person", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def search_person(
     ctx: Context,
     name: str,
@@ -2296,8 +2405,9 @@ async def search_person(
     params = {"name": name, "withHidden": withHidden}
     result = await get_client().search_person(params, get_user_token())
     return {"results": result} if isinstance(result, list) else result
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Search Places", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def search_places(
     ctx: Context,
     name: str,
@@ -2310,8 +2420,9 @@ async def search_places(
     params = {"name": name}
     result = await get_client().search_places(params, get_user_token())
     return {"results": result} if isinstance(result, list) else result
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Assets By People", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_assets_by_people(
     ctx: Context,
     personIds: list[str],
@@ -2343,8 +2454,9 @@ async def list_assets_by_people(
 # =============================================================================
 # Timeline & Map Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="List Time Buckets", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_time_buckets(
 size: str,
 ctx: Context,
@@ -2366,8 +2478,9 @@ userId: str = "",
     if userId: params["userId"] = userId
     result = await get_client().get_time_buckets(params, get_user_token())
     return {"results": result} if isinstance(result, list) else result
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="List Time Bucket Assets", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_time_bucket_assets(
 size: str,
 timeBucket: str,
@@ -2391,8 +2504,9 @@ userId: str = "",
     if userId: params["userId"] = userId
     data = await get_client().get_time_bucket(params, get_user_token())
     return {"items": json_to_toon(data)}
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Map Markers", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_map_markers(
 ctx: Context,
 fileCreatedAfter: str = "",
@@ -2418,8 +2532,9 @@ withPartners: bool = False,
     if withPartners: params["withPartners"] = "true"
     result = await get_client().get_map_markers(params, get_user_token())
     return {"results": result} if isinstance(result, list) else result
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Reverse Geocode", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def reverse_geocode(
     lat: float,
     lon: float,
@@ -2438,8 +2553,9 @@ async def reverse_geocode(
 # =============================================================================
 # Duplicate Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List All Duplicates", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_duplicates(
 ctx: Context,
 include_all_fields: bool = False,
@@ -2454,8 +2570,9 @@ include_all_fields: bool = False,
         include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
     return {"items": json_to_toon(data)}
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Dismiss Duplicate Group", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def dismiss_duplicate_group(
     id: str,
     ctx: Context
@@ -2470,18 +2587,21 @@ async def dismiss_duplicate_group(
 # =============================================================================
 # Trash Tools
 # =============================================================================
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Empty Trash", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def empty_trash(ctx: Context) -> dict[str, Any]:
     """Permanently empty the trash."""
     return await get_client().empty_trash(get_user_token())
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Restore Trash", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def restore_trash(ctx: Context) -> dict[str, Any]:
     """Restore all trashed assets."""
     return await get_client().restore_trash(get_user_token())
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Restore Trash Assets", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def restore_trash_assets(
     ids: list[str],
     ctx: Context
@@ -2497,18 +2617,21 @@ async def restore_trash_assets(
 # =============================================================================
 # System Config Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get System Config", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_system_config(ctx: Context) -> dict[str, Any]:
     """Get the full system configuration."""
     return await get_client().get_system_config(get_user_token())
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get System Config Defaults", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_system_config_defaults(ctx: Context) -> dict[str, Any]:
     """Get system configuration defaults."""
     return await get_client().get_system_config_defaults(get_user_token())
-
-@mcp.tool(tags={"read", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Storage Template Options", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_storage_template_options(ctx: Context) -> dict[str, Any]:
     """Get available storage template options."""
     return await get_client().get_storage_template_options(get_user_token())
@@ -2516,8 +2639,9 @@ async def get_storage_template_options(ctx: Context) -> dict[str, Any]:
 # =============================================================================
 # User & Account Tools
 # =============================================================================
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="List All Users", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def list_all_users(
 ctx: Context,
 include_all_fields: bool = False,
@@ -2532,8 +2656,9 @@ include_all_fields: bool = False,
         include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
     return {"items": json_to_toon(data)}
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get User By Id", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_user_by_id(
 id: str,
 ctx: Context,
@@ -2548,8 +2673,9 @@ include_all_fields: bool = False,
     return await get_client().get_user_by_id(
         id, get_user_token(), include_all_fields=include_all_fields
     )
-
-@mcp.tool(tags={"read", "basic", "immich"})
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get My User Info", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_my_user_info(
 ctx: Context,
 include_all_fields: bool = False,
@@ -2562,8 +2688,9 @@ include_all_fields: bool = False,
     return await get_client().get_my_user_info(
         get_user_token(), include_all_fields=include_all_fields
     )
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Update My User", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_my_user(
 ctx: Context,
 email: Optional[str] = None,
@@ -2585,13 +2712,15 @@ avatarColor: Optional[str] = None,
     return await get_client().update_my_user(
         params.model_dump(exclude_unset=True, exclude_none=True), get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE
     )
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get My Preferences", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_my_preferences(ctx: Context) -> dict[str, Any]:
     """Get the current user's preferences."""
     return await get_client().get_my_preferences(get_user_token())
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Update My Preferences", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def update_my_preferences(
     ctx: Context,
     albums_defaultAssetOrder: Optional[str] = None,
@@ -2717,8 +2846,9 @@ async def update_my_preferences(
             t["sidebarWeb"] = tags_sidebarWeb
         payload["tags"] = t
     return await get_client().update_my_preferences(payload, get_user_token())
-
-@mcp.tool(tags={"read", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get User Profile Image Url", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def get_user_profile_image_url(
     id: str,
     ctx: Context
@@ -2730,13 +2860,15 @@ async def get_user_profile_image_url(
     """
     url = await get_client().get_user_profile_image_url(id, get_user_token())
     return {"url": url}
-
-@mcp.tool(tags={"write", "primary", "immich"})
+@mcp.tool(
+    tags={"primary", "immich"}, annotations=ToolAnnotations(title="Delete My Onboarding", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
 async def delete_my_onboarding(ctx: Context) -> dict[str, Any]:
     """Delete the current user's onboarding status."""
     return await get_client().delete_my_onboarding(get_user_token())
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Create User", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
 async def create_user(
     email: str,
     password: str,
@@ -2764,8 +2896,9 @@ async def create_user(
     if quotaSizeInBytes is not None:
         payload["quotaSizeInBytes"] = quotaSizeInBytes
     return await get_client().create_user(payload, get_user_token(), include_all_fields=ALLOW_ALL_AGGREGATE)
-
-@mcp.tool(tags={"write", "advanced", "immich"})
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Delete User", readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False)
+)
 async def delete_user(
     id: str,
     ctx: Context,
