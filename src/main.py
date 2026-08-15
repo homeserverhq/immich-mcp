@@ -1032,7 +1032,7 @@ async def list_all_photos(
     withPeople: bool = False,
     withStacked: bool = False,
 ) -> dict[str, Any]:
-    """List all photo (IMAGE) assets. Returns thumbnails, file metadata, playback URLs, and owner info for each asset.
+    """List all photos. Returns thumbnails, file metadata, playback URLs, and owner info for each asset.
 
     Args:
         page: Page number. Defaults to 1.
@@ -1099,7 +1099,7 @@ async def list_all_videos(
     withPeople: bool = False,
     withStacked: bool = False,
 ) -> dict[str, Any]:
-    """List all video (VIDEO) assets. Returns thumbnails, file metadata, playback URLs, and owner info for each asset.
+    """List all videos. Returns thumbnails, file metadata, playback URLs, and owner info for each asset.
 
     Args:
         page: Page number. Defaults to 1.
@@ -1166,7 +1166,7 @@ async def list_all_other(
     withPeople: bool = False,
     withStacked: bool = False,
 ) -> dict[str, Any]:
-    """List all OTHER assets (audio, sidecar (.xmp), and unrecognized non-image/video files). Returns thumbnails, file metadata, playback URLs, and owner info for each asset.
+    """List all other assets. Returns thumbnails, file metadata, playback URLs, and owner info for each asset.
 
     Args:
         page: Page number. Defaults to 1.
