@@ -2,7 +2,7 @@
 
 This repository contains a Model Context Protocol (MCP) server that acts
 as a secure, multi-tenant proxy between an AI Assistant and the Immich
-backend API. It exposes **130 MCP tools** covering 16 resource domains
+backend API. It exposes **135 MCP tools** covering 16 resource domains
 with full CRUD, search, timeline, map, and relationship management.
 
 ## ✨ Features
@@ -13,14 +13,14 @@ with full CRUD, search, timeline, map, and relationship management.
 - **👥 Multi-Tenancy** — Uses Python `contextvars` to maintain thread-safe
   user identity isolation, ensuring all AI-driven actions are scoped to
   the authenticated user's permissions.
-- **📊 Full Immich Coverage** — 130 tools mapped to Immich API endpoints
+- **📊 Full Immich Coverage** — 135 tools mapped to Immich API endpoints
   across 16 resource domains.
 - **⚡ TOON Optimization** — Bulk list responses are automatically compressed
   using TOON (Token-Optimized Object Notation) to reduce token consumption
   and maximize context window efficiency.
 - **🚀 Efficient Gets** — GET responses return only commonly used fields by
   default. Full objects are available via an `include_all_fields` flag.
-- **🧪 Comprehensive Testing** — 153 automated tests covering all tool
+- **🧪 Comprehensive Testing** — 152 automated tests covering all tool
   domains, run via the test runner pipeline.
 - **🏷️ Tool Annotations** — All tools expose standard MCP ToolAnnotations hints (readOnlyHint, destructiveHint, idempotentHint, openWorldHint). The tags field carries grouping metadata (basic/primary/advanced + immich).
 
@@ -79,18 +79,21 @@ The MCP server serves at `http://immich-mcp:80/mcp` (Streamable HTTP).
 
 ## 🛠️ API Tool Mapping
 
-The server implements 130 MCP tools organized into the following categories:
+The server implements 135 MCP tools organized into the following categories:
 
-### 🖼️ Asset Management (22 tools)
+### 🖼️ Asset Management (24 tools)
 
 - `list_all_assets` — List every photo, video, and audio file in the library
+- `list_all_photos` — List all photo (IMAGE) assets
+- `list_all_videos` — List all video (VIDEO) assets
+- `list_all_other` — List all OTHER assets (audio, sidecar `.xmp`, unrecognized)
 - `get_asset_by_id` — Get a single asset by ID
 - `get_asset_statistics` — Get asset statistics
 - `get_asset_exif` — Get EXIF data for an asset
-- `list_asset_ocr` — Get OCR data for an asset
-- `list_asset_metadata` — Get metadata for an asset
+- `get_asset_ocr` — Get OCR data for an asset
+- `get_asset_metadata` — Get metadata for an asset
 - `get_asset_metadata_by_key` — Get a specific metadata key
-- `list_asset_edits` — Get edit history
+- `get_asset_edits` — Get edit history
 - `get_asset_thumbnail_url` — Get thumbnail URL
 - `get_asset_original_url` — Get original file URL
 - `get_asset_video_url` — Get video playback URL
@@ -104,7 +107,6 @@ The server implements 130 MCP tools organized into the following categories:
 - `list_assets_by_tag` — List assets that have a specific tag
 - `list_assets_by_album` — List all assets in an album
 - `list_assets_by_memory` — List all assets in a memory
-- `list_assets_by_people` — List assets for specific people
 
 ### 💿 Album Management (11 tools)
 
@@ -132,7 +134,7 @@ The server implements 130 MCP tools organized into the following categories:
 - `tag_assets_by_tag` — Tag assets with a specific tag
 - `untag_assets` — Remove tag from assets
 
-### 👤 People & Faces (11 tools)
+### 👤 People & Faces (12 tools)
 
 - `list_all_people` — List all people
 - `get_person_by_id` — Get a single person
@@ -143,16 +145,18 @@ The server implements 130 MCP tools organized into the following categories:
 - `get_person_statistics` — Get person statistics
 - `get_person_thumbnail_url` — Get person thumbnail URL
 - `list_faces_by_asset` — Get faces for an asset
+- `create_face` — Create a face annotation on an asset
 - `reassign_face` — Reassign a face to a different person
 - `delete_face` — Delete a face
 
-### 📚 Library Management (7 tools)
+### 📚 Library Management (8 tools)
 
 - `list_all_libraries` — List all libraries
 - `get_library_by_id` — Get a single library
 - `create_library` — Create a library
 - `update_library` — Update a library
 - `delete_library_by_id` — Delete a library
+- `run_job` — Run a background job once (e.g. `duplicateDetection`)
 - `scan_library` — Scan a library
 - `get_library_statistics` — Get library statistics
 
@@ -214,7 +218,7 @@ The server implements 130 MCP tools organized into the following categories:
 - `list_server_version_history` — Get version history
 - `get_server_apk_links` — Get APK download links
 
-### 🔍 Search (8 tools)
+### 🔍 Search (9 tools)
 
 - `search_metadata` — Search assets by metadata
 - `search_smart` — Smart (CLIP) search
@@ -224,6 +228,7 @@ The server implements 130 MCP tools organized into the following categories:
 - `search_cities` — Assets grouped by city
 - `search_person` — Search people by name
 - `search_places` — Search places by name
+- `list_assets_by_people` — List assets for specific people
 
 ### 🗺️  Timeline & Map (4 tools)
 

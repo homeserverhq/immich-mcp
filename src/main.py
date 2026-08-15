@@ -901,6 +901,43 @@ async def list_all_assets(
         withPeople: Include people data.
         withStacked: Include stacked assets.
     """
+    return await _list_assets_by_type(
+        type=type, page=page, size=size, include_all_fields=include_all_fields,
+        isFavorite=isFavorite, isMotion=isMotion, isOffline=isOffline,
+        isNotInAlbum=isNotInAlbum, takenAfter=takenAfter, takenBefore=takenBefore,
+        originalFileName=originalFileName, city=city, state=state, country=country,
+        make=make, model=model, personIds=personIds, tagIds=tagIds, albumIds=albumIds,
+        libraryId=libraryId, order=order, withExif=withExif, withPeople=withPeople,
+        withStacked=withStacked,
+    )
+
+
+async def _list_assets_by_type(
+    type: Optional[str],
+    page: int,
+    size: int,
+    include_all_fields: bool,
+    isFavorite: Optional[bool],
+    isMotion: Optional[bool],
+    isOffline: Optional[bool],
+    isNotInAlbum: Optional[bool],
+    takenAfter: Optional[str],
+    takenBefore: Optional[str],
+    originalFileName: Optional[str],
+    city: Optional[str],
+    state: Optional[str],
+    country: Optional[str],
+    make: Optional[str],
+    model: Optional[str],
+    personIds: list[str],
+    tagIds: list[str],
+    albumIds: list[str],
+    libraryId: Optional[str],
+    order: Optional[str],
+    withExif: bool,
+    withPeople: bool,
+    withStacked: bool,
+) -> dict[str, Any]:
     payload: dict[str, Any] = {"page": page, "size": size}
     if type: payload["type"] = type
     if isFavorite is not None: payload["isFavorite"] = isFavorite
@@ -926,6 +963,246 @@ async def list_all_assets(
     return await get_client().search_metadata(
         payload, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False
     )
+
+
+async def _list_asset_widget(
+    ctx: Context,
+    type: str,
+    page: int,
+    size: int,
+    include_all_fields: bool,
+    isFavorite: Optional[bool],
+    isMotion: Optional[bool],
+    isOffline: Optional[bool],
+    isNotInAlbum: Optional[bool],
+    takenAfter: Optional[str],
+    takenBefore: Optional[str],
+    originalFileName: Optional[str],
+    city: Optional[str],
+    state: Optional[str],
+    country: Optional[str],
+    make: Optional[str],
+    model: Optional[str],
+    personIds: list[str],
+    tagIds: list[str],
+    albumIds: list[str],
+    libraryId: Optional[str],
+    order: Optional[str],
+    withExif: bool,
+    withPeople: bool,
+    withStacked: bool,
+) -> dict[str, Any]:
+    return await _list_assets_by_type(
+        type=type, page=page, size=size, include_all_fields=include_all_fields,
+        isFavorite=isFavorite, isMotion=isMotion, isOffline=isOffline,
+        isNotInAlbum=isNotInAlbum, takenAfter=takenAfter, takenBefore=takenBefore,
+        originalFileName=originalFileName, city=city, state=state, country=country,
+        make=make, model=model, personIds=personIds, tagIds=tagIds, albumIds=albumIds,
+        libraryId=libraryId, order=order, withExif=withExif, withPeople=withPeople,
+        withStacked=withStacked,
+    )
+
+
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="List All Photos", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
+async def list_all_photos(
+    ctx: Context,
+    page: int = 1,
+    size: int = 100,
+    include_all_fields: bool = False,
+    isFavorite: Optional[bool] = None,
+    isMotion: Optional[bool] = None,
+    isOffline: Optional[bool] = None,
+    isNotInAlbum: Optional[bool] = None,
+    takenAfter: Optional[str] = None,
+    takenBefore: Optional[str] = None,
+    originalFileName: Optional[str] = None,
+    city: Optional[str] = None,
+    state: Optional[str] = None,
+    country: Optional[str] = None,
+    make: Optional[str] = None,
+    model: Optional[str] = None,
+    personIds: list[str] = [],
+    tagIds: list[str] = [],
+    albumIds: list[str] = [],
+    libraryId: Optional[str] = None,
+    order: Optional[str] = None,
+    withExif: bool = False,
+    withPeople: bool = False,
+    withStacked: bool = False,
+) -> dict[str, Any]:
+    """List all photo (IMAGE) assets. Returns thumbnails, file metadata, playback URLs, and owner info for each asset.
+
+    Args:
+        page: Page number. Defaults to 1.
+        size: Number of results per page. Defaults to 100.
+        include_all_fields: Default False (common fields only). Set True for all fields.
+        isFavorite: Filter by favorite status.
+        isMotion: Filter by motion photo.
+        isOffline: Filter by offline status.
+        isNotInAlbum: Filter assets not in any album.
+        takenAfter: Filter by taken date after. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        takenBefore: Filter by taken date before. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        originalFileName: Filter by original file name.
+        city: Filter by city name.
+        state: Filter by state/province name.
+        country: Filter by country name.
+        make: Filter by camera make (e.g. Canon, Apple).
+        model: Filter by camera model (e.g. EOS R5, iPhone 15).
+        personIds: List of person IDs.
+        tagIds: List of tag IDs.
+        albumIds: List of album IDs.
+        libraryId: Library ID to filter by.
+        order: asc or desc.
+        withExif: Include EXIF data.
+        withPeople: Include people data.
+        withStacked: Include stacked assets.
+    """
+    return await _list_asset_widget(
+        ctx=ctx, type="IMAGE", page=page, size=size, include_all_fields=include_all_fields,
+        isFavorite=isFavorite, isMotion=isMotion, isOffline=isOffline,
+        isNotInAlbum=isNotInAlbum, takenAfter=takenAfter, takenBefore=takenBefore,
+        originalFileName=originalFileName, city=city, state=state, country=country,
+        make=make, model=model, personIds=personIds, tagIds=tagIds, albumIds=albumIds,
+        libraryId=libraryId, order=order, withExif=withExif, withPeople=withPeople,
+        withStacked=withStacked,
+    )
+
+
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="List All Videos", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
+async def list_all_videos(
+    ctx: Context,
+    page: int = 1,
+    size: int = 100,
+    include_all_fields: bool = False,
+    isFavorite: Optional[bool] = None,
+    isMotion: Optional[bool] = None,
+    isOffline: Optional[bool] = None,
+    isNotInAlbum: Optional[bool] = None,
+    takenAfter: Optional[str] = None,
+    takenBefore: Optional[str] = None,
+    originalFileName: Optional[str] = None,
+    city: Optional[str] = None,
+    state: Optional[str] = None,
+    country: Optional[str] = None,
+    make: Optional[str] = None,
+    model: Optional[str] = None,
+    personIds: list[str] = [],
+    tagIds: list[str] = [],
+    albumIds: list[str] = [],
+    libraryId: Optional[str] = None,
+    order: Optional[str] = None,
+    withExif: bool = False,
+    withPeople: bool = False,
+    withStacked: bool = False,
+) -> dict[str, Any]:
+    """List all video (VIDEO) assets. Returns thumbnails, file metadata, playback URLs, and owner info for each asset.
+
+    Args:
+        page: Page number. Defaults to 1.
+        size: Number of results per page. Defaults to 100.
+        include_all_fields: Default False (common fields only). Set True for all fields.
+        isFavorite: Filter by favorite status.
+        isMotion: Filter by motion photo.
+        isOffline: Filter by offline status.
+        isNotInAlbum: Filter assets not in any album.
+        takenAfter: Filter by taken date after. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        takenBefore: Filter by taken date before. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        originalFileName: Filter by original file name.
+        city: Filter by city name.
+        state: Filter by state/province name.
+        country: Filter by country name.
+        make: Filter by camera make (e.g. Canon, Apple).
+        model: Filter by camera model (e.g. EOS R5, iPhone 15).
+        personIds: List of person IDs.
+        tagIds: List of tag IDs.
+        albumIds: List of album IDs.
+        libraryId: Library ID to filter by.
+        order: asc or desc.
+        withExif: Include EXIF data.
+        withPeople: Include people data.
+        withStacked: Include stacked assets.
+    """
+    return await _list_asset_widget(
+        ctx=ctx, type="VIDEO", page=page, size=size, include_all_fields=include_all_fields,
+        isFavorite=isFavorite, isMotion=isMotion, isOffline=isOffline,
+        isNotInAlbum=isNotInAlbum, takenAfter=takenAfter, takenBefore=takenBefore,
+        originalFileName=originalFileName, city=city, state=state, country=country,
+        make=make, model=model, personIds=personIds, tagIds=tagIds, albumIds=albumIds,
+        libraryId=libraryId, order=order, withExif=withExif, withPeople=withPeople,
+        withStacked=withStacked,
+    )
+
+
+@mcp.tool(
+    tags={"basic", "immich"}, annotations=ToolAnnotations(title="List All Other Assets", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+)
+async def list_all_other(
+    ctx: Context,
+    page: int = 1,
+    size: int = 100,
+    include_all_fields: bool = False,
+    isFavorite: Optional[bool] = None,
+    isMotion: Optional[bool] = None,
+    isOffline: Optional[bool] = None,
+    isNotInAlbum: Optional[bool] = None,
+    takenAfter: Optional[str] = None,
+    takenBefore: Optional[str] = None,
+    originalFileName: Optional[str] = None,
+    city: Optional[str] = None,
+    state: Optional[str] = None,
+    country: Optional[str] = None,
+    make: Optional[str] = None,
+    model: Optional[str] = None,
+    personIds: list[str] = [],
+    tagIds: list[str] = [],
+    albumIds: list[str] = [],
+    libraryId: Optional[str] = None,
+    order: Optional[str] = None,
+    withExif: bool = False,
+    withPeople: bool = False,
+    withStacked: bool = False,
+) -> dict[str, Any]:
+    """List all OTHER assets (audio, sidecar (.xmp), and unrecognized non-image/video files). Returns thumbnails, file metadata, playback URLs, and owner info for each asset.
+
+    Args:
+        page: Page number. Defaults to 1.
+        size: Number of results per page. Defaults to 100.
+        include_all_fields: Default False (common fields only). Set True for all fields.
+        isFavorite: Filter by favorite status.
+        isMotion: Filter by motion photo.
+        isOffline: Filter by offline status.
+        isNotInAlbum: Filter assets not in any album.
+        takenAfter: Filter by taken date after. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        takenBefore: Filter by taken date before. ISO 8601 format (2026-06-22T15:00:00-04:00).
+        originalFileName: Filter by original file name.
+        city: Filter by city name.
+        state: Filter by state/province name.
+        country: Filter by country name.
+        make: Filter by camera make (e.g. Canon, Apple).
+        model: Filter by camera model (e.g. EOS R5, iPhone 15).
+        personIds: List of person IDs.
+        tagIds: List of tag IDs.
+        albumIds: List of album IDs.
+        libraryId: Library ID to filter by.
+        order: asc or desc.
+        withExif: Include EXIF data.
+        withPeople: Include people data.
+        withStacked: Include stacked assets.
+    """
+    return await _list_asset_widget(
+        ctx=ctx, type="OTHER", page=page, size=size, include_all_fields=include_all_fields,
+        isFavorite=isFavorite, isMotion=isMotion, isOffline=isOffline,
+        isNotInAlbum=isNotInAlbum, takenAfter=takenAfter, takenBefore=takenBefore,
+        originalFileName=originalFileName, city=city, state=state, country=country,
+        make=make, model=model, personIds=personIds, tagIds=tagIds, albumIds=albumIds,
+        libraryId=libraryId, order=order, withExif=withExif, withPeople=withPeople,
+        withStacked=withStacked,
+    )
+
 
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Assets By Tag", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)

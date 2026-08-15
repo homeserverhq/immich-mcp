@@ -29,7 +29,7 @@ COMMON_FIELDS = {
     "library": {"id", "name", "ownerId", "assetCount", "importPaths"},
     "memory": {"id", "type", "memoryAt", "ownerId"},
     "stack": {"id", "primaryAssetId", "assets"},
-    "shared_link": {"id", "type", "userId", "description", "allowDownload", "allowUpload", "slug"},
+    "shared_link": {"id", "type", "userId", "description", "allowDownload", "allowUpload", "slug", "key"},
     "activity": {"id", "type", "userId", "assetId", "albumId", "comment", "createdAt"},
     "partner": {"id", "name", "email", "inTimeline"},
     "user": {"id", "name", "email"},
@@ -82,12 +82,106 @@ def _filter_fields(data: Any, common_set: set[str]) -> Any:
     return data
 
 
-def _filter_search_assets(data: Any, common_set: set[str]) -> Any:
-    """Filter assets.items inside a search/metadata response."""
-    if isinstance(data, dict) and "assets" in data:
-        assets = data.get("assets", {})
-        if isinstance(assets, dict) and "items" in assets:
-            data = {**data, "assets": {**assets, "items": _filter_fields(assets["items"], common_set)}}
+# Public web URL routes for entity types that map to a per-item deep link.
+# Format: entity -> (result field name, path template | None).
+# A callable route takes the field dict and returns an absolute path (e.g. shared links).
+_PUBLIC_ROUTES: dict[str, tuple[str, Any]] = {
+    "asset": ("assetUrl", "/photos/{id}"),
+    "album": ("albumUrl", "/albums/{id}"),
+    "person": ("personUrl", "/people/{id}"),
+    "partner": ("partnerUrl", "/partners/{id}"),
+    "library": ("libraryUrl", "/admin/library-management/{id}"),
+    "user": ("userUrl", "/admin/users/{id}"),
+    "memory": ("memoryUrl", "/memory?id={id}"),
+    # Shared links resolve to either the slug route (/s/{slug}) or key route (/share/{key}).
+    "shared_link": ("sharedLinkUrl", None),
+}
+
+
+def _shared_link_path(obj: dict[str, Any]) -> Optional[str]:
+    slug = obj.get("slug")
+    if slug:
+        return f"/s/{slug}"
+    key = obj.get("key")
+    if key:
+        return f"/share/{key}"
+    return None
+
+
+def _build_public_path(entity: str, obj: dict[str, Any]) -> Optional[str]:
+    """Build the web URL path for an entity field dict, or None if it can't be built."""
+    if entity not in _PUBLIC_ROUTES:
+        return None
+    routes = _PUBLIC_ROUTES[entity]
+    route = routes[1]
+    if route is None:
+        if entity == "shared_link":
+            return _shared_link_path(obj)
+        return None
+    item_id = obj.get("id")
+    if not item_id:
+        return None
+    return route.format(id=item_id)
+
+
+def _augment_urls(data: Any, entity: str, public_url: str) -> Any:
+    """Inject the public URL field ({entity}Url) into each entity object."""
+    if not public_url or entity not in _PUBLIC_ROUTES:
+        return data
+    field_name = _PUBLIC_ROUTES[entity][0]
+    if isinstance(data, list):
+        for item in data:
+            _augment_urls(item, entity, public_url)
+        return data
+    if isinstance(data, dict):
+        path = _build_public_path(entity, data)
+        if path:
+            data[f"{field_name}"] = f"{public_url}{path}"
+        return data
+    return data
+
+
+# Some list endpoints return the entity array wrapped in a plural key (e.g. people -> "people").
+_PROCESS_WRAPPERS: dict[str, str] = {
+    "person": "people",
+}
+
+
+def _process(data: Any, entity: str, include_all_fields: bool, public_url: str) -> Any:
+    """Filter to common fields (unless full fields requested) and always augment the public URL."""
+    wrapper = _PROCESS_WRAPPERS.get(entity)
+    if wrapper and isinstance(data, dict) and isinstance(data.get(wrapper), list):
+        items = data[wrapper]
+        if not include_all_fields and entity in COMMON_FIELDS:
+            items = _filter_fields(items, COMMON_FIELDS[entity])
+        items = _augment_urls(items, entity, public_url)
+        return {**data, wrapper: items}
+    if not include_all_fields and entity in COMMON_FIELDS:
+        data = _filter_fields(data, COMMON_FIELDS[entity])
+    return _augment_urls(data, entity, public_url)
+
+
+# Search responses nest the entity array under a plural key (e.g. asset -> "assets").
+_PLURAL_KEYS: dict[str, str] = {
+    "asset": "assets",
+    "person": "people",
+}
+
+
+def _process_search(data: Any, entity: str, include_all_fields: bool, public_url: str) -> Any:
+    """Variant of _process for search/metadata responses carrying nested {plural}.items."""
+    container_key = _PLURAL_KEYS.get(entity, entity + "s")
+    if isinstance(data, dict) and isinstance(data.get(container_key), dict):
+        container = data[container_key]
+        if isinstance(container, dict) and "items" in container:
+            items = container["items"]
+            if not include_all_fields and entity in COMMON_FIELDS:
+                items = _filter_fields(items, COMMON_FIELDS[entity])
+            items = _augment_urls(items, entity, public_url)
+            data = {**data, container_key: {**container, "items": items}}
+    elif not include_all_fields and entity in COMMON_FIELDS:
+        data = _filter_fields(data, COMMON_FIELDS[entity])
+        data = _augment_urls(data, entity, public_url)
     return data
 
 
@@ -197,9 +291,7 @@ class ImmichClient:
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get(f"/assets/{asset_id}", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["asset"])
-        return data
+        return _process(data, "asset", include_all_fields, self.public_url)
 
     async def get_asset_statistics(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.get("/assets/statistics", api_key)
@@ -239,21 +331,15 @@ class ImmichClient:
 
     async def update_asset(self, asset_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/assets/{asset_id}", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["asset"])
-        return data
+        return _process(data, "asset", include_all_fields, self.public_url)
 
     async def update_asset_edits(self, asset_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/assets/{asset_id}/edits", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["asset"])
-        return data
+        return _process(data, "asset", include_all_fields, self.public_url)
 
     async def update_asset_metadata(self, asset_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/assets/{asset_id}/metadata", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["asset"])
-        return data
+        return _process(data, "asset", include_all_fields, self.public_url)
 
     async def delete_asset_metadata_by_key(self, asset_id: str, key: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/assets/{asset_id}/metadata/{key}", api_key)
@@ -263,15 +349,11 @@ class ImmichClient:
 
     async def bulk_update_assets(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put("/assets", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["asset"])
-        return data
+        return _process(data, "asset", include_all_fields, self.public_url)
 
     async def copy_asset(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put("/assets/copy", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["asset"])
-        return data
+        return _process(data, "asset", include_all_fields, self.public_url)
 
     async def check_bulk_upload(self, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.post("/assets/bulk-upload-check", api_key, json=payload)
@@ -300,9 +382,7 @@ class ImmichClient:
             "/search/metadata", api_key,
             json={"tagIds": [tag_id], "page": page, "size": size},
         )
-        if not include_all_fields:
-            data = _filter_search_assets(data, COMMON_FIELDS["asset"])
-        return data
+        return _process_search(data, "asset", include_all_fields, self.public_url)
 
     async def get_album_assets(
         self, album_id: str, api_key: Optional[str] = None,
@@ -313,9 +393,7 @@ class ImmichClient:
             "/search/metadata", api_key,
             json={"albumIds": [album_id], "page": page, "size": size},
         )
-        if not include_all_fields:
-            data = _filter_search_assets(data, COMMON_FIELDS["asset"])
-        return data
+        return _process_search(data, "asset", include_all_fields, self.public_url)
 
     async def get_memory_assets(
         self, memory_id: str, api_key: Optional[str] = None,
@@ -323,9 +401,7 @@ class ImmichClient:
     ) -> Any:
         data = await self.get(f"/memories/{memory_id}", api_key)
         assets = data.get("assets", [])
-        if not include_all_fields:
-            assets = _filter_fields(assets, COMMON_FIELDS["asset"])
-        return assets
+        return _process(assets, "asset", include_all_fields, self.public_url)
 
     async def upload_asset(
         self,
@@ -365,9 +441,7 @@ class ImmichClient:
             response = await client.post(url, headers=headers, files=files, data=data)
             response.raise_for_status()
             result = response.json()
-            if not include_all_fields:
-                result = _filter_fields(result, COMMON_FIELDS["asset"])
-            return result
+            return _process(result, "asset", include_all_fields, self.public_url)
 
     # ==========================================================================
     # Album Domain
@@ -379,48 +453,36 @@ class ImmichClient:
         params: Optional[dict] = None,
     ) -> Any:
         data = await self.get("/albums", api_key, params=params)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["album"])
-        return data
+        return _process(data, "album", include_all_fields, self.public_url)
 
     async def get_album_by_id(
         self, album_id: str, api_key: Optional[str] = None,
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get(f"/albums/{album_id}", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["album"])
-        return data
+        return _process(data, "album", include_all_fields, self.public_url)
 
     async def create_album(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.post("/albums", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["album"])
-        return data
+        return _process(data, "album", include_all_fields, self.public_url)
 
     async def update_album(self, album_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.patch(f"/albums/{album_id}", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["album"])
-        return data
+        return _process(data, "album", include_all_fields, self.public_url)
 
     async def delete_album_by_id(self, album_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/albums/{album_id}", api_key)
 
     async def add_assets_to_album(self, album_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/albums/{album_id}/assets", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["asset"])
-        return data
+        return _process(data, "asset", include_all_fields, self.public_url)
 
     async def remove_assets_from_album(self, album_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/albums/{album_id}/assets", api_key, json=payload)
 
     async def add_users_to_album(self, album_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/albums/{album_id}/users", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["user"])
-        return data
+        return _process(data, "user", include_all_fields, self.public_url)
 
     async def update_user_role_in_album(self, album_id: str, user_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.put(f"/albums/{album_id}/user/{user_id}", api_key, json=payload)
@@ -507,54 +569,40 @@ class ImmichClient:
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get("/people", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["person"])
-        return data
+        return _process(data, "person", include_all_fields, self.public_url)
 
     async def get_person_by_id(
         self, person_id: str, api_key: Optional[str] = None,
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get(f"/people/{person_id}", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["person"])
-        return data
+        return _process(data, "person", include_all_fields, self.public_url)
 
     async def create_person(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.post("/people", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["person"])
-        return data
+        return _process(data, "person", include_all_fields, self.public_url)
 
     async def update_person(self, person_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/people/{person_id}", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["person"])
-        return data
+        return _process(data, "person", include_all_fields, self.public_url)
 
     async def delete_person_by_id(self, person_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/people/{person_id}", api_key)
 
     async def bulk_update_people(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put("/people", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["person"])
-        return data
+        return _process(data, "person", include_all_fields, self.public_url)
 
     async def bulk_delete_people(self, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.delete("/people", api_key, json=payload)
 
     async def merge_people(self, person_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.post(f"/people/{person_id}/merge", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["person"])
-        return data
+        return _process(data, "person", include_all_fields, self.public_url)
 
     async def reassign_faces(self, person_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/people/{person_id}/reassign", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["person"])
-        return data
+        return _process(data, "person", include_all_fields, self.public_url)
 
     async def get_person_statistics(self, person_id: str, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.get(f"/people/{person_id}/statistics", api_key)
@@ -589,30 +637,22 @@ class ImmichClient:
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get("/libraries", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["library"])
-        return data
+        return _process(data, "library", include_all_fields, self.public_url)
 
     async def get_library_by_id(
         self, library_id: str, api_key: Optional[str] = None,
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get(f"/libraries/{library_id}", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["library"])
-        return data
+        return _process(data, "library", include_all_fields, self.public_url)
 
     async def create_library(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.post("/libraries", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["library"])
-        return data
+        return _process(data, "library", include_all_fields, self.public_url)
 
     async def update_library(self, library_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/libraries/{library_id}", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["library"])
-        return data
+        return _process(data, "library", include_all_fields, self.public_url)
 
     async def delete_library_by_id(self, library_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/libraries/{library_id}", api_key)
@@ -638,39 +678,29 @@ class ImmichClient:
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get("/memories", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["memory"])
-        return data
+        return _process(data, "memory", include_all_fields, self.public_url)
 
     async def get_memory_by_id(
         self, memory_id: str, api_key: Optional[str] = None,
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get(f"/memories/{memory_id}", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["memory"])
-        return data
+        return _process(data, "memory", include_all_fields, self.public_url)
 
     async def create_memory(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.post("/memories", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["memory"])
-        return data
+        return _process(data, "memory", include_all_fields, self.public_url)
 
     async def update_memory(self, memory_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/memories/{memory_id}", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["memory"])
-        return data
+        return _process(data, "memory", include_all_fields, self.public_url)
 
     async def delete_memory_by_id(self, memory_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/memories/{memory_id}", api_key)
 
     async def add_assets_to_memory(self, memory_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/memories/{memory_id}/assets", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["memory"])
-        return data
+        return _process(data, "memory", include_all_fields, self.public_url)
 
     async def remove_assets_from_memory(self, memory_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/memories/{memory_id}/assets", api_key, json=payload)
@@ -733,48 +763,36 @@ class ImmichClient:
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get("/shared-links", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["shared_link"])
-        return data
+        return _process(data, "shared_link", include_all_fields, self.public_url)
 
     async def get_shared_link_by_id(
         self, shared_link_id: str, api_key: Optional[str] = None,
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get(f"/shared-links/{shared_link_id}", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["shared_link"])
-        return data
+        return _process(data, "shared_link", include_all_fields, self.public_url)
 
     async def get_current_shared_link(
         self, api_key: Optional[str] = None,
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get("/shared-links/me", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["shared_link"])
-        return data
+        return _process(data, "shared_link", include_all_fields, self.public_url)
 
     async def create_shared_link(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.post("/shared-links", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["shared_link"])
-        return data
+        return _process(data, "shared_link", include_all_fields, self.public_url)
 
     async def update_shared_link(self, shared_link_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.patch(f"/shared-links/{shared_link_id}", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["shared_link"])
-        return data
+        return _process(data, "shared_link", include_all_fields, self.public_url)
 
     async def delete_shared_link_by_id(self, shared_link_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/shared-links/{shared_link_id}", api_key)
 
     async def add_assets_to_shared_link(self, shared_link_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/shared-links/{shared_link_id}/assets", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["shared_link"])
-        return data
+        return _process(data, "shared_link", include_all_fields, self.public_url)
 
     async def remove_assets_from_shared_link(self, shared_link_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/shared-links/{shared_link_id}/assets", api_key, json=payload)
@@ -818,21 +836,15 @@ class ImmichClient:
         params: Optional[dict] = None,
     ) -> Any:
         data = await self.get("/partners", api_key, params=params)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["partner"])
-        return data
+        return _process(data, "partner", include_all_fields, self.public_url)
 
     async def create_partner(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.post("/partners", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["partner"])
-        return data
+        return _process(data, "partner", include_all_fields, self.public_url)
 
     async def update_partner(self, partner_id: str, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put(f"/partners/{partner_id}", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["partner"])
-        return data
+        return _process(data, "partner", include_all_fields, self.public_url)
 
     async def delete_partner_by_id(self, partner_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/partners/{partner_id}", api_key)
@@ -846,21 +858,15 @@ class ImmichClient:
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.post("/search/metadata", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_search_assets(data, COMMON_FIELDS["asset"])
-        return data
+        return _process_search(data, "asset", include_all_fields, self.public_url)
 
     async def search_smart(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.post("/search/smart", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_search_assets(data, COMMON_FIELDS["asset"])
-        return data
+        return _process_search(data, "asset", include_all_fields, self.public_url)
 
     async def search_random(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.post("/search/random", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_search_assets(data, COMMON_FIELDS["asset"])
-        return data
+        return _process_search(data, "asset", include_all_fields, self.public_url)
 
     async def search_suggestions(self, params: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.get("/search/suggestions", api_key, params=params)
@@ -907,9 +913,7 @@ class ImmichClient:
 
     async def get_time_bucket(self, params: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.get("/timeline/bucket", api_key, params=params)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["asset"])
-        return data
+        return _process(data, "asset", include_all_fields, self.public_url)
 
     async def get_map_markers(self, params: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.get("/map/markers", api_key, params=params)
@@ -986,33 +990,25 @@ class ImmichClient:
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get("/users", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["user"])
-        return data
+        return _process(data, "user", include_all_fields, self.public_url)
 
     async def get_user_by_id(
         self, user_id: str, api_key: Optional[str] = None,
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get(f"/users/{user_id}", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["user"])
-        return data
+        return _process(data, "user", include_all_fields, self.public_url)
 
     async def get_my_user_info(
         self, api_key: Optional[str] = None,
         include_all_fields: bool = False,
     ) -> Any:
         data = await self.get("/users/me", api_key)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["user"])
-        return data
+        return _process(data, "user", include_all_fields, self.public_url)
 
     async def update_my_user(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.put("/users/me", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["user"])
-        return data
+        return _process(data, "user", include_all_fields, self.public_url)
 
     async def get_my_preferences(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.get("/users/me/preferences", api_key)
@@ -1046,9 +1042,7 @@ class ImmichClient:
 
     async def create_user(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.post("/admin/users", api_key, json=payload)
-        if not include_all_fields:
-            data = _filter_fields(data, COMMON_FIELDS["user"])
-        return data
+        return _process(data, "user", include_all_fields, self.public_url)
 
     async def delete_user(self, user_id: str, api_key: Optional[str] = None) -> Any:
         return await self.request("DELETE", f"/admin/users/{user_id}", api_key, json={})
