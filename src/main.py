@@ -359,70 +359,145 @@ class AssetEditItem(BaseModel):
 @mcp.tool(
     tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Server Ping", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_server_ping(ctx: Context) -> dict[str, Any]:
-    """Check if the Immich server is reachable."""
-    return await get_client().get_server_ping(get_user_token())
+async def get_server_ping(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Check if the Immich server is reachable.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_server_ping(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Server Version", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_server_version(ctx: Context) -> dict[str, Any]:
-    """Get the Immich server version."""
-    return await get_client().get_server_version(get_user_token())
+async def get_server_version(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get the Immich server version.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_server_version(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Server About", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_server_about(ctx: Context) -> dict[str, Any]:
-    """Get general server information."""
-    return await get_client().get_server_about(get_user_token())
+async def get_server_about(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get general server information.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_server_about(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Server Config", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_server_config(ctx: Context) -> dict[str, Any]:
-    """Get the server configuration settings."""
-    return await get_client().get_server_config(get_user_token())
+async def get_server_config(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get the server configuration settings.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_server_config(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Server Features", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_server_features(ctx: Context) -> dict[str, Any]:
-    """Get the server feature flags."""
-    return await get_client().get_server_features(get_user_token())
+async def get_server_features(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get the server feature flags.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_server_features(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Server Statistics", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_server_statistics(ctx: Context) -> dict[str, Any]:
-    """Get server usage statistics."""
-    return await get_client().get_server_statistics(get_user_token())
+async def get_server_statistics(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get server usage statistics.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_server_statistics(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Server Storage", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_server_storage(ctx: Context) -> dict[str, Any]:
-    """Get server storage information."""
-    return await get_client().get_server_storage(get_user_token())
+async def get_server_storage(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get server storage information.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_server_storage(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Server Media Types", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_server_media_types(ctx: Context) -> dict[str, Any]:
-    """Get supported media types."""
-    return await get_client().get_server_media_types(get_user_token())
+async def get_server_media_types(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get supported media types.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_server_media_types(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Server Version Check", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_server_version_check(ctx: Context) -> dict[str, Any]:
-    """Get version check status."""
-    return await get_client().get_server_version_check(get_user_token())
+async def get_server_version_check(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get version check status.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_server_version_check(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="List Server Version History", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def list_server_version_history(ctx: Context) -> dict[str, Any]:
+async def list_server_version_history(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
     """Get version history."""
-    result = await get_client().get_server_version_history(get_user_token())
+    result = await get_client().get_server_version_history(
+        get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False
+    )
     return {"results": result} if isinstance(result, list) else result
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Server Apk Links", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_server_apk_links(ctx: Context) -> dict[str, Any]:
-    """Get APK download links."""
-    return     await get_client().get_server_apk_links(get_user_token())
+async def get_server_apk_links(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get APK download links.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_server_apk_links(get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
 
 # =============================================================================
 # Asset Tools
@@ -447,9 +522,16 @@ include_all_fields: bool = False,
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Asset Statistics", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_asset_statistics(ctx: Context) -> dict[str, Any]:
-    """Get asset statistics (total count, image/video counts)."""
-    return await get_client().get_asset_statistics(get_user_token())
+async def get_asset_statistics(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get asset statistics (total count, image/video counts).
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_asset_statistics(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Asset Exif", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
@@ -466,32 +548,36 @@ async def get_asset_exif(
     exif = data.get("exifInfo", {})
     return {"exifInfo": exif}
 @mcp.tool(
-    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="List Asset Ocr", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Asset Ocr", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def list_asset_ocr(
+async def get_asset_ocr(
     id: str,
-    ctx: Context
+    ctx: Context,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get OCR data for an asset.
 
     Args:
         id: The unique ID of the asset.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
-    data = await get_client().get_asset_ocr(id, get_user_token())
+    data = await get_client().get_asset_ocr(id, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"items": data} if isinstance(data, list) else data
 @mcp.tool(
-    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="List Asset Metadata", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Asset Metadata", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def list_asset_metadata(
+async def get_asset_metadata(
     id: str,
-    ctx: Context
+    ctx: Context,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get metadata for an asset.
 
     Args:
         id: The unique ID of the asset.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
-    data = await get_client().get_asset_metadata(id, get_user_token())
+    data = await get_client().get_asset_metadata(id, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"items": data} if isinstance(data, list) else data
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Asset Metadata By Key", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -499,28 +585,32 @@ async def list_asset_metadata(
 async def get_asset_metadata_by_key(
     id: str,
     key: str,
-    ctx: Context
+    ctx: Context,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get specific metadata key for an asset.
 
     Args:
         id: The unique ID of the asset.
         key: The metadata key.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
-    return await get_client().get_asset_metadata_by_key(id, key, get_user_token())
+    return await get_client().get_asset_metadata_by_key(id, key, get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
-    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="List Asset Edits", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Asset Edits", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def list_asset_edits(
+async def get_asset_edits(
     id: str,
-    ctx: Context
+    ctx: Context,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get edit history for an asset.
 
     Args:
         id: The unique ID of the asset.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
-    return await get_client().get_asset_edits(id, get_user_token())
+    return await get_client().get_asset_edits(id, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
 @mcp.tool(
     tags={"basic", "immich"}, annotations=ToolAnnotations(title="Get Asset Thumbnail Url", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
@@ -806,7 +896,7 @@ async def list_all_assets(
     if withPeople: payload["withPeople"] = True
     if withStacked: payload["withStacked"] = True
     return await get_client().search_metadata(
-        payload, get_user_token(), include_all_fields=include_all_fields
+        payload, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False
     )
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Assets By Tag", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -828,7 +918,7 @@ async def list_assets_by_tag(
     """
     return await get_client().get_assets_by_tag(
         tagId, get_user_token(), page=page, size=size,
-        include_all_fields=include_all_fields,
+        include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Assets By Album", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -850,7 +940,7 @@ async def list_assets_by_album(
     """
     return await get_client().get_album_assets(
         albumId, get_user_token(), page=page, size=size,
-        include_all_fields=include_all_fields,
+        include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Assets By Memory", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -867,7 +957,7 @@ async def list_assets_by_memory(
         include_all_fields: Default False (common fields only). Set True for all fields.
     """
     data = await get_client().get_memory_assets(
-        memoryId, get_user_token(), include_all_fields=include_all_fields,
+        memoryId, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
     return {"items": data} if isinstance(data, list) else data
 @mcp.tool(
@@ -1079,22 +1169,31 @@ async def remove_user_from_album(
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Album Statistics", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_album_statistics(ctx: Context) -> dict[str, Any]:
-    """Get album statistics."""
-    return await get_client().get_album_statistics(get_user_token())
+async def get_album_statistics(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get album statistics.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_album_statistics(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Album Map Markers", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
 async def list_album_map_markers(
     id: str,
-    ctx: Context
+    ctx: Context,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get map markers for an album.
 
     Args:
         id: The unique ID of the album.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
-    data = await get_client().get_album_map_markers(id, get_user_token())
+    data = await get_client().get_album_map_markers(id, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"results": data} if isinstance(data, list) else data
 
 # =============================================================================
@@ -1386,14 +1485,16 @@ async def merge_people(
 )
 async def get_person_statistics(
     id: str,
-    ctx: Context
+    ctx: Context,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get statistics for a person.
 
     Args:
         id: The unique ID of the person.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
-    return await get_client().get_person_statistics(id, get_user_token())
+    return await get_client().get_person_statistics(id, get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get Person Thumbnail Url", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
@@ -1413,15 +1514,52 @@ async def get_person_thumbnail_url(
 )
 async def list_faces_by_asset(
     id: str,
-    ctx: Context
+    ctx: Context,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get faces detected in an asset.
 
     Args:
         id: The unique ID of the asset.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
-    data = await get_client().get_faces_by_asset(id, get_user_token())
+    data = await get_client().get_faces_by_asset(id, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"items": data} if isinstance(data, list) else data
+@mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Create Face", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
+async def create_face(
+    assetId: str,
+    personId: str,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    imageWidth: int,
+    imageHeight: int,
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Create a face annotation on an asset.
+
+    Args:
+        assetId: The asset to attach the face to.
+        personId: The person the face belongs to.
+        x: Top-left X coordinate of the face bounding box.
+        y: Top-left Y coordinate of the face bounding box.
+        width: Width of the face bounding box.
+        height: Height of the face bounding box.
+        imageWidth: Full width of the source image.
+        imageHeight: Full height of the source image.
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    payload = {
+        "assetId": assetId, "personId": personId,
+        "x": x, "y": y, "width": width, "height": height,
+        "imageWidth": imageWidth, "imageHeight": imageHeight,
+    }
+    data = await get_client().create_face(payload, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
+    return {"results": data} if isinstance(data, list) else data
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Reassign Face", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
 )
@@ -1557,6 +1695,19 @@ async def delete_library_by_id(
     """
     return await get_client().delete_library_by_id(id, get_user_token())
 @mcp.tool(
+    tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Run Job", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+)
+async def run_job(
+    jobId: str,
+    ctx: Context
+) -> dict[str, Any]:
+    """Run a background job once (e.g. duplicateDetection).
+
+    Args:
+        jobId: The name of the job to run.
+    """
+    return await get_client().run_job(jobId, get_user_token())
+@mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Scan Library", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
 async def scan_library(
@@ -1574,14 +1725,16 @@ async def scan_library(
 )
 async def get_library_statistics(
     id: str,
-    ctx: Context
+    ctx: Context,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get statistics for a library.
 
     Args:
         id: The unique ID of the library.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
-    return await get_client().get_library_statistics(id, get_user_token())
+    return await get_client().get_library_statistics(id, get_user_token(), include_all_fields=include_all_fields)
 
 # =============================================================================
 # Memory Tools
@@ -1732,9 +1885,16 @@ async def remove_assets_from_memory(
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Memory Statistics", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_memory_statistics(ctx: Context) -> dict[str, Any]:
-    """Get memory statistics."""
-    return await get_client().get_memory_statistics(get_user_token())
+async def get_memory_statistics(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get memory statistics.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_memory_statistics(get_user_token(), include_all_fields=include_all_fields)
 
 # =============================================================================
 # Stack Tools
@@ -2040,17 +2200,19 @@ async def get_activity_statistics(
 albumId: str,
 ctx: Context,
 assetId: str = "",
+include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get activity statistics for an album.
 
     Args:
         albumId: Album ID.
         assetId: Asset ID.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     params = {"albumId": albumId}
     if assetId:
         params["assetId"] = assetId
-    return await get_client().get_activity_statistics(get_user_token(), params=params)
+    return await get_client().get_activity_statistics(get_user_token(), params=params, include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Create Activity", readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
 )
@@ -2195,6 +2357,7 @@ model: Optional[str] = None,
     withExif: bool = False,
     withPeople: bool = False,
     withStacked: bool = False,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Search assets by metadata fields.
 
@@ -2223,6 +2386,7 @@ model: Optional[str] = None,
         withExif: Include EXIF data.
         withPeople: Include people data.
         withStacked: Include stacked assets.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     payload = {"page": page, "size": size}
     if query: payload["query"] = query
@@ -2247,7 +2411,7 @@ model: Optional[str] = None,
     if withExif: payload["withExif"] = True
     if withPeople: payload["withPeople"] = True
     if withStacked: payload["withStacked"] = True
-    return await get_client().search_metadata(payload, get_user_token())
+    return await get_client().search_metadata(payload, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
 @mcp.tool(
     tags={"basic", "immich"}, annotations=ToolAnnotations(title="Search Smart", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
@@ -2300,37 +2464,53 @@ model: Optional[str] = None,
     if tagIds: payload["tagIds"] = tagIds
     if albumIds: payload["albumIds"] = albumIds
     if libraryId: payload["libraryId"] = libraryId
-    return await get_client().search_smart(payload, get_user_token(), include_all_fields=include_all_fields)
+    return await get_client().search_smart(payload, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Search Suggestions", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
 async def search_suggestions(
     type: str,
     query: str,
-    ctx: Context
+    ctx: Context,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get search suggestions.
 
     Args:
         type: Suggestion type (country, state, city, camera-make, camera-model, camera-lens-model).
         query: Search query text.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     params = {"type": type, "query": query}
-    result = await get_client().search_suggestions(params, get_user_token())
+    result = await get_client().search_suggestions(params, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"results": result} if isinstance(result, list) else result
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Search Explore", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def search_explore(ctx: Context) -> dict[str, Any]:
-    """Get explore data grouped by city."""
-    result = await get_client().search_explore(get_user_token())
+async def search_explore(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get explore data grouped by city.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    result = await get_client().search_explore(get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"results": result} if isinstance(result, list) else result
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Search Cities", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def search_cities(ctx: Context) -> dict[str, Any]:
-    """Get assets grouped by city."""
-    result = await get_client().search_cities(get_user_token())
+async def search_cities(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get assets grouped by city.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    result = await get_client().search_cities(get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"results": result} if isinstance(result, list) else result
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Search Random", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -2386,7 +2566,7 @@ async def search_random(
     if country: payload["country"] = country
     if make: payload["make"] = make
     if model: payload["model"] = model
-    data = await get_client().search_random(payload, get_user_token(), include_all_fields=include_all_fields)
+    data = await get_client().search_random(payload, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"results": data} if isinstance(data, list) else data
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Search Person", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -2395,15 +2575,17 @@ async def search_person(
     ctx: Context,
     name: str,
     withHidden: bool = False,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Search for people by name.
 
     Args:
         name: Person name to search for.
         withHidden: Include hidden people.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     params = {"name": name, "withHidden": withHidden}
-    result = await get_client().search_person(params, get_user_token())
+    result = await get_client().search_person(params, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"results": result} if isinstance(result, list) else result
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Search Places", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -2411,14 +2593,16 @@ async def search_person(
 async def search_places(
     ctx: Context,
     name: str,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Search for places by name.
 
     Args:
         name: Place name to search for.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     params = {"name": name}
-    result = await get_client().search_places(params, get_user_token())
+    result = await get_client().search_places(params, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"results": result} if isinstance(result, list) else result
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Assets By People", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -2448,7 +2632,7 @@ async def list_assets_by_people(
     if type: payload["type"] = type
     if isFavorite is not None: payload["isFavorite"] = isFavorite
     return await get_client().search_metadata(
-        payload, get_user_token(), include_all_fields=include_all_fields,
+        payload, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False,
     )
 
 # =============================================================================
@@ -2463,6 +2647,7 @@ ctx: Context,
 albumId: str = "",
 personId: str = "",
 userId: str = "",
+include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get time buckets for timeline view.
 
@@ -2471,12 +2656,13 @@ userId: str = "",
         albumId: Filter by album.
         personId: Filter by person.
         userId: Filter by user.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     params = {"size": size.upper() if size else "MONTH"}
     if albumId: params["albumId"] = albumId
     if personId: params["personId"] = personId
     if userId: params["userId"] = userId
-    result = await get_client().get_time_buckets(params, get_user_token())
+    result = await get_client().get_time_buckets(params, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"results": result} if isinstance(result, list) else result
 @mcp.tool(
     tags={"basic", "immich"}, annotations=ToolAnnotations(title="List Time Bucket Assets", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -2488,6 +2674,7 @@ ctx: Context,
 albumId: str = "",
 personId: str = "",
 userId: str = "",
+include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get assets in a specific time bucket.
 
@@ -2497,12 +2684,13 @@ userId: str = "",
         albumId: Filter by album.
         personId: Filter by person.
         userId: Filter by user.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     params = {"size": size.upper() if size else "MONTH", "timeBucket": timeBucket}
     if albumId: params["albumId"] = albumId
     if personId: params["personId"] = personId
     if userId: params["userId"] = userId
-    data = await get_client().get_time_bucket(params, get_user_token())
+    data = await get_client().get_time_bucket(params, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"items": json_to_toon(data)}
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="List Map Markers", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -2514,6 +2702,7 @@ fileCreatedBefore: str = "",
 albumId: str = "",
 personId: str = "",
 withPartners: bool = False,
+include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Get map markers for assets with geolocation data.
 
@@ -2523,6 +2712,7 @@ withPartners: bool = False,
         albumId: Filter by album ID.
         personId: Filter by person ID.
         withPartners: Include partner assets.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     params = {}
     if fileCreatedAfter: params["fileCreatedAfter"] = fileCreatedAfter
@@ -2530,7 +2720,7 @@ withPartners: bool = False,
     if albumId: params["albumId"] = albumId
     if personId: params["personId"] = personId
     if withPartners: params["withPartners"] = "true"
-    result = await get_client().get_map_markers(params, get_user_token())
+    result = await get_client().get_map_markers(params, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"results": result} if isinstance(result, list) else result
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Reverse Geocode", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -2538,16 +2728,18 @@ withPartners: bool = False,
 async def reverse_geocode(
     lat: float,
     lon: float,
-    ctx: Context
+    ctx: Context,
+    include_all_fields: bool = False,
 ) -> dict[str, Any]:
     """Reverse geocode coordinates to a location.
 
     Args:
         lat: Latitude.
         lon: Longitude.
+        include_all_fields: Default False (common fields only). Set True for all fields.
     """
     params = {"lat": lat, "lon": lon}
-    result = await get_client().reverse_geocode(params, get_user_token())
+    result = await get_client().reverse_geocode(params, get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
     return {"results": result} if isinstance(result, list) else result
 
 # =============================================================================
@@ -2620,21 +2812,42 @@ async def restore_trash_assets(
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get System Config", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_system_config(ctx: Context) -> dict[str, Any]:
-    """Get the full system configuration."""
-    return await get_client().get_system_config(get_user_token())
+async def get_system_config(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get the full system configuration.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_system_config(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get System Config Defaults", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_system_config_defaults(ctx: Context) -> dict[str, Any]:
-    """Get system configuration defaults."""
-    return await get_client().get_system_config_defaults(get_user_token())
+async def get_system_config_defaults(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get system configuration defaults.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_system_config_defaults(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"advanced", "immich"}, annotations=ToolAnnotations(title="Get Storage Template Options", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_storage_template_options(ctx: Context) -> dict[str, Any]:
-    """Get available storage template options."""
-    return await get_client().get_storage_template_options(get_user_token())
+async def get_storage_template_options(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get available storage template options.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_storage_template_options(get_user_token(), include_all_fields=include_all_fields if ALLOW_ALL_AGGREGATE else False)
 
 # =============================================================================
 # User & Account Tools
@@ -2715,9 +2928,16 @@ avatarColor: Optional[str] = None,
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Get My Preferences", readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )
-async def get_my_preferences(ctx: Context) -> dict[str, Any]:
-    """Get the current user's preferences."""
-    return await get_client().get_my_preferences(get_user_token())
+async def get_my_preferences(
+    ctx: Context,
+    include_all_fields: bool = False,
+) -> dict[str, Any]:
+    """Get the current user's preferences.
+
+    Args:
+        include_all_fields: Default False (common fields only). Set True for all fields.
+    """
+    return await get_client().get_my_preferences(get_user_token(), include_all_fields=include_all_fields)
 @mcp.tool(
     tags={"primary", "immich"}, annotations=ToolAnnotations(title="Update My Preferences", readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 )

@@ -35,6 +35,41 @@ COMMON_FIELDS = {
     "user": {"id", "name", "email"},
     "duplicate": {"id", "assetIds", "assets"},
     "queue": {"name", "queueStatus", "jobCounts"},
+    "server_ping": {"res"},
+    "server_version": {"major", "minor", "patch"},
+    "server_about": {"version", "name", "features"},
+    "server_config": {"oauthButtonText", "isInitialized"},
+    "server_features": {"smartSearch", "duplicateDetection", "reverseGeocoding",
+                        "emailNotification", "socialFeatures", "facialRecognition"},
+    "server_statistics": {"status", "startupTime", "usage", "licenseKey"},
+    "server_storage": {"storageType", "diskSizeTotal", "diskSizeUsed", "diskSizeFree"},
+    "server_media_types": {"image", "video", "sidecar"},
+    "server_version_check": {"updateAvailable", "serverVersion", "releaseAsset"},
+    "server_version_history": {"items"},
+    "server_apk_links": {"items"},
+    "system_config": {"config"},
+    "system_config_defaults": {"config"},
+    "storage_template": {"items"},
+    "asset_statistics": {"count", "totalSizeBytes", "totalPixelSize",
+                          "images", "videos", "other", "startDate", "endDate"},
+    "asset_ocr": {"id", "assetId", "ocr"},
+    "asset_metadata": {"items"},
+    "asset_edits": {"items"},
+    "album_statistics": {"albumCount", "assets"},
+    "map_markers": {"count", "items"},
+    "person_statistics": {"assets", "faces"},
+    "faces": {"id", "personId", "assetId", "boundingBox"},
+    "library_statistics": {"id", "name", "assetCount"},
+    "memory_statistics": {"memoryCount", "assets"},
+    "activity_statistics": {"count", "activities"},
+    "search_suggestions": {"items"},
+    "explore": {"items"},
+    "cities": {"items"},
+    "people": {"items"},
+    "places": {"items"},
+    "time_buckets": {"items"},
+    "geocode": {"items"},
+    "preferences": {"avatar"},
 }
 
 
@@ -115,38 +150,43 @@ class ImmichClient:
     # Server Domain
     # ==========================================================================
 
-    async def get_server_ping(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/server/ping", api_key)
+    async def _maybe_filter(self, data: Any, key: str, include_all_fields: bool) -> Any:
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS[key])
+        return data
 
-    async def get_server_version(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/server/version", api_key)
+    async def get_server_ping(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        return await self._maybe_filter(await self.get("/server/ping", api_key), "server_ping", include_all_fields)
 
-    async def get_server_about(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/server/about", api_key)
+    async def get_server_version(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        return await self._maybe_filter(await self.get("/server/version", api_key), "server_version", include_all_fields)
 
-    async def get_server_config(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/server/config", api_key)
+    async def get_server_about(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        return await self._maybe_filter(await self.get("/server/about", api_key), "server_about", include_all_fields)
 
-    async def get_server_features(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/server/features", api_key)
+    async def get_server_config(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        return await self._maybe_filter(await self.get("/server/config", api_key), "server_config", include_all_fields)
 
-    async def get_server_statistics(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/server/statistics", api_key)
+    async def get_server_features(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        return await self._maybe_filter(await self.get("/server/features", api_key), "server_features", include_all_fields)
 
-    async def get_server_storage(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/server/storage", api_key)
+    async def get_server_statistics(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        return await self._maybe_filter(await self.get("/server/statistics", api_key), "server_statistics", include_all_fields)
 
-    async def get_server_media_types(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/server/media-types", api_key)
+    async def get_server_storage(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        return await self._maybe_filter(await self.get("/server/storage", api_key), "server_storage", include_all_fields)
 
-    async def get_server_version_check(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/server/version-check", api_key)
+    async def get_server_media_types(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        return await self._maybe_filter(await self.get("/server/media-types", api_key), "server_media_types", include_all_fields)
 
-    async def get_server_version_history(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/server/version-history", api_key)
+    async def get_server_version_check(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        return await self._maybe_filter(await self.get("/server/version-check", api_key), "server_version_check", include_all_fields)
 
-    async def get_server_apk_links(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/server/apk-links", api_key)
+    async def get_server_version_history(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        return await self._maybe_filter(await self.get("/server/version-history", api_key), "server_version_history", include_all_fields)
+
+    async def get_server_apk_links(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        return await self._maybe_filter(await self.get("/server/apk-links", api_key), "server_apk_links", include_all_fields)
 
     # ==========================================================================
     # Asset Domain
@@ -161,20 +201,35 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["asset"])
         return data
 
-    async def get_asset_statistics(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/assets/statistics", api_key)
+    async def get_asset_statistics(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/assets/statistics", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["asset_statistics"])
+        return data
 
-    async def get_asset_ocr(self, asset_id: str, api_key: Optional[str] = None) -> Any:
-        return await self.get(f"/assets/{asset_id}/ocr", api_key)
+    async def get_asset_ocr(self, asset_id: str, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get(f"/assets/{asset_id}/ocr", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["asset_ocr"])
+        return data
 
-    async def get_asset_metadata(self, asset_id: str, api_key: Optional[str] = None) -> Any:
-        return await self.get(f"/assets/{asset_id}/metadata", api_key)
+    async def get_asset_metadata(self, asset_id: str, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get(f"/assets/{asset_id}/metadata", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["asset_metadata"])
+        return data
 
-    async def get_asset_metadata_by_key(self, asset_id: str, key: str, api_key: Optional[str] = None) -> Any:
-        return await self.get(f"/assets/{asset_id}/metadata/{key}", api_key)
+    async def get_asset_metadata_by_key(self, asset_id: str, key: str, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get(f"/assets/{asset_id}/metadata/{key}", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["asset_metadata"])
+        return data
 
-    async def get_asset_edits(self, asset_id: str, api_key: Optional[str] = None) -> Any:
-        return await self.get(f"/assets/{asset_id}/edits", api_key)
+    async def get_asset_edits(self, asset_id: str, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get(f"/assets/{asset_id}/edits", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["asset_edits"])
+        return data
 
     async def get_asset_thumbnail_url(self, asset_id: str, api_key: Optional[str] = None) -> str:
         return f"{self.public_url}/api/assets/{asset_id}/thumbnail"
@@ -223,6 +278,9 @@ class ImmichClient:
 
     async def run_asset_jobs(self, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.post("/assets/jobs", api_key, json=payload)
+
+    async def run_job(self, job_id: str, api_key: Optional[str] = None) -> Any:
+        return await self.put(f"/jobs/{job_id}", api_key, json={"command": "start"})
 
     async def delete_asset_edits(self, asset_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/assets/{asset_id}/edits", api_key)
@@ -370,14 +428,20 @@ class ImmichClient:
     async def remove_user_from_album(self, album_id: str, user_id: str, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/albums/{album_id}/user/{user_id}", api_key)
 
-    async def get_album_statistics(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/albums/statistics", api_key)
+    async def get_album_statistics(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/albums/statistics", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["album_statistics"])
+        return data
 
-    async def get_album_map_markers(self, album_id: str, api_key: Optional[str] = None) -> Any:
+    async def get_album_map_markers(self, album_id: str, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         try:
-            return await self.get(f"/albums/{album_id}/map-markers", api_key)
+            data = await self.get(f"/albums/{album_id}/map-markers", api_key)
         except Exception:
-            return await self.get("/map/markers", api_key, params={"albumId": album_id})
+            data = await self.get("/map/markers", api_key, params={"albumId": album_id})
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["map_markers"])
+        return data
 
     async def add_assets_to_albums(self, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.put("/albums/assets", api_key, json=payload)
@@ -492,17 +556,26 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["person"])
         return data
 
-    async def get_person_statistics(self, person_id: str, api_key: Optional[str] = None) -> Any:
-        return await self.get(f"/people/{person_id}/statistics", api_key)
+    async def get_person_statistics(self, person_id: str, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get(f"/people/{person_id}/statistics", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["person_statistics"])
+        return data
 
     async def get_person_thumbnail_url(self, person_id: str, api_key: Optional[str] = None) -> str:
         return f"{self.public_url}/api/people/{person_id}/thumbnail"
 
-    async def get_faces_by_asset(self, asset_id: str, api_key: Optional[str] = None) -> Any:
-        return await self.get(f"/faces?id={asset_id}", api_key)
+    async def get_faces_by_asset(self, asset_id: str, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get(f"/faces?id={asset_id}", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["faces"])
+        return data
 
-    async def create_face(self, payload: dict, api_key: Optional[str] = None) -> Any:
-        return await self.post("/faces", api_key, json=payload)
+    async def create_face(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.post("/faces", api_key, json=payload)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["faces"])
+        return data
 
     async def delete_face(self, face_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.request("DELETE", f"/faces/{face_id}", api_key, json=payload)
@@ -550,8 +623,11 @@ class ImmichClient:
     async def validate_library(self, library_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.post(f"/libraries/{library_id}/validate", api_key, json=payload)
 
-    async def get_library_statistics(self, library_id: str, api_key: Optional[str] = None) -> Any:
-        return await self.get(f"/libraries/{library_id}/statistics", api_key)
+    async def get_library_statistics(self, library_id: str, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get(f"/libraries/{library_id}/statistics", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["library_statistics"])
+        return data
 
     # ==========================================================================
     # Memory Domain
@@ -599,8 +675,11 @@ class ImmichClient:
     async def remove_assets_from_memory(self, memory_id: str, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.delete(f"/memories/{memory_id}/assets", api_key, json=payload)
 
-    async def get_memory_statistics(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/memories/statistics", api_key)
+    async def get_memory_statistics(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/memories/statistics", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["memory_statistics"])
+        return data
 
     # ==========================================================================
     # Stack Domain
@@ -714,8 +793,11 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["activity"])
         return data
 
-    async def get_activity_statistics(self, api_key: Optional[str] = None, params: Optional[dict] = None) -> Any:
-        return await self.get("/activities/statistics", api_key, params=params)
+    async def get_activity_statistics(self, api_key: Optional[str] = None, params: Optional[dict] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/activities/statistics", api_key, params=params)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["activity_statistics"])
+        return data
 
     async def create_activity(self, payload: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
         data = await self.post("/activities", api_key, json=payload)
@@ -780,20 +862,35 @@ class ImmichClient:
             data = _filter_search_assets(data, COMMON_FIELDS["asset"])
         return data
 
-    async def search_suggestions(self, params: dict, api_key: Optional[str] = None) -> Any:
-        return await self.get("/search/suggestions", api_key, params=params)
+    async def search_suggestions(self, params: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/search/suggestions", api_key, params=params)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["search_suggestions"])
+        return data
 
-    async def search_explore(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/search/explore", api_key)
+    async def search_explore(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/search/explore", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["explore"])
+        return data
 
-    async def search_cities(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/search/cities", api_key)
+    async def search_cities(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/search/cities", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["cities"])
+        return data
 
-    async def search_person(self, params: dict, api_key: Optional[str] = None) -> Any:
-        return await self.get("/search/person", api_key, params=params)
+    async def search_person(self, params: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/search/person", api_key, params=params)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["people"])
+        return data
 
-    async def search_places(self, params: dict, api_key: Optional[str] = None) -> Any:
-        return await self.get("/search/places", api_key, params=params)
+    async def search_places(self, params: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/search/places", api_key, params=params)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["places"])
+        return data
 
     async def search_statistics(self, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.post("/search/statistics", api_key, json=payload)
@@ -802,17 +899,29 @@ class ImmichClient:
     # Timeline & Map Domain
     # ==========================================================================
 
-    async def get_time_buckets(self, params: dict, api_key: Optional[str] = None) -> Any:
-        return await self.get("/timeline/buckets", api_key, params=params)
+    async def get_time_buckets(self, params: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/timeline/buckets", api_key, params=params)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["time_buckets"])
+        return data
 
-    async def get_time_bucket(self, params: dict, api_key: Optional[str] = None) -> Any:
-        return await self.get("/timeline/bucket", api_key, params=params)
+    async def get_time_bucket(self, params: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/timeline/bucket", api_key, params=params)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["asset"])
+        return data
 
-    async def get_map_markers(self, params: dict, api_key: Optional[str] = None) -> Any:
-        return await self.get("/map/markers", api_key, params=params)
+    async def get_map_markers(self, params: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/map/markers", api_key, params=params)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["map_markers"])
+        return data
 
-    async def reverse_geocode(self, params: dict, api_key: Optional[str] = None) -> Any:
-        return await self.get("/map/reverse-geocode", api_key, params=params)
+    async def reverse_geocode(self, params: dict, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/map/reverse-geocode", api_key, params=params)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["geocode"])
+        return data
 
     # ==========================================================================
     # Duplicates Domain
@@ -850,14 +959,23 @@ class ImmichClient:
     # System Config Domain
     # ==========================================================================
 
-    async def get_system_config(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/system-config", api_key)
+    async def get_system_config(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/system-config", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["system_config"])
+        return data
 
-    async def get_system_config_defaults(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/system-config/defaults", api_key)
+    async def get_system_config_defaults(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/system-config/defaults", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["system_config_defaults"])
+        return data
 
-    async def get_storage_template_options(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/system-config/storage-template-options", api_key)
+    async def get_storage_template_options(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/system-config/storage-template-options", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["storage_template"])
+        return data
 
     # ==========================================================================
     # User Domain
@@ -896,8 +1014,11 @@ class ImmichClient:
             data = _filter_fields(data, COMMON_FIELDS["user"])
         return data
 
-    async def get_my_preferences(self, api_key: Optional[str] = None) -> Any:
-        return await self.get("/users/me/preferences", api_key)
+    async def get_my_preferences(self, api_key: Optional[str] = None, include_all_fields: bool = False) -> Any:
+        data = await self.get("/users/me/preferences", api_key)
+        if not include_all_fields:
+            data = _filter_fields(data, COMMON_FIELDS["preferences"])
+        return data
 
     async def update_my_preferences(self, payload: dict, api_key: Optional[str] = None) -> Any:
         return await self.put("/users/me/preferences", api_key, json=payload)
