@@ -124,6 +124,21 @@ def _build_public_path(entity: str, obj: dict[str, Any]) -> Optional[str]:
     return route.format(id=item_id)
 
 
+def _augment_image_url(data: Any, entity: str, public_url: str) -> Any:
+    """Inject the original-file URL (imageUrl) into each asset object."""
+    if entity != "asset" or not public_url:
+        return data
+    if isinstance(data, list):
+        for item in data:
+            _augment_image_url(item, entity, public_url)
+        return data
+    if isinstance(data, dict):
+        item_id = data.get("id")
+        if item_id:
+            data["imageUrl"] = f"{public_url}/api/assets/{item_id}/original"
+    return data
+
+
 def _augment_urls(data: Any, entity: str, public_url: str) -> Any:
     """Inject the public URL field ({entity}Url) into each entity object."""
     if not public_url or entity not in _PUBLIC_ROUTES:
@@ -132,11 +147,13 @@ def _augment_urls(data: Any, entity: str, public_url: str) -> Any:
     if isinstance(data, list):
         for item in data:
             _augment_urls(item, entity, public_url)
+            _augment_image_url(item, entity, public_url)
         return data
     if isinstance(data, dict):
         path = _build_public_path(entity, data)
         if path:
             data[f"{field_name}"] = f"{public_url}{path}"
+        _augment_image_url(data, entity, public_url)
         return data
     return data
 

@@ -202,6 +202,13 @@ def pick_id(key: str) -> Optional[str]:
     return None
 
 
+def pick_field(key: str, field: str) -> Optional[str]:
+    entry = store.get(key, {})
+    if isinstance(entry, dict):
+        return entry.get(field)
+    return None
+
+
 def pick_first_face_id(key: str) -> Optional[str]:
     entry = store.get(key, [])
     if isinstance(entry, dict):
@@ -296,20 +303,33 @@ async def main():
         print(f"**Discovered**: {len(tool_names)} tools")
         log(f"Tools: {', '.join(sorted(tool_names))}")
 
-        # Fetch real asset IDs via an MCP tool call (no raw API access)
-        log("Fetching existing assets...")
-        _asset_resp = await session.call_tool("list_all_assets", {"page": 1, "size": 100})
-        _asset_payload = extract_content(_asset_resp)
-        if isinstance(_asset_payload, dict):
-            _asset_items = get_list_items(_asset_payload.get("assets") or _asset_payload)
-            _asset_items = _asset_items or get_list_items(_asset_payload)
-        else:
-            _asset_items = get_list_items(_asset_payload)
+        # Create self-contained asset fixtures. The runner only ever touches
+        # assets it uploads itself; pre-existing library content is untouched.
+        log("Creating asset fixtures...")
         ASSET_IDS.clear()
-        ASSET_IDS.extend([item["id"] for item in _asset_items if isinstance(item, dict) and item.get("id")])
-        log(f"Found {len(ASSET_IDS)} assets: {ASSET_IDS[:3]}...")
+        _fixtures = [
+            ("web-test-fix-red", "fixture_red.png",
+             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC"),
+            ("web-test-fix-green", "fixture_green.png",
+             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNg+M8AAAICAQB7CYF4AAAAAElFTkSuQmCC"),
+            ("web-test-fix-blue", "fixture_blue.png",
+             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYPgPAAEDAQAIicLsAAAAAElFTkSuQmCC"),
+        ]
+        for _dev_id, _fname, _b64 in _fixtures:
+            _resp = await session.call_tool("upload_asset", {
+                "base64_data": _b64,
+                "deviceAssetId": _dev_id,
+                "deviceId": "TEST-RUNNER",
+                "fileCreatedAt": "2026-06-22T15:00:00+00:00",
+                "fileModifiedAt": "2026-06-22T15:00:00+00:00",
+                "filename": _fname,
+            })
+            _payload = extract_content(_resp)
+            if (isinstance(_payload, dict) and _payload.get("id")
+                    and _payload["id"] not in ASSET_IDS):
+                ASSET_IDS.append(_payload["id"])
         ASSET_IDS.extend([FAKE_UUID] if not ASSET_IDS else [])
-        log(f"Using {len(ASSET_IDS)} asset IDs: {ASSET_IDS}")
+        log(f"Using {len(ASSET_IDS)} fixture asset IDs: {ASSET_IDS}")
 
         # Create dedicated test user for partner and album sharing tests
         log("Creating test user...")
@@ -353,8 +373,6 @@ async def main():
         await run_test_with_store(session, "A28 get_memory_statistics", "get_memory_statistics", {})
         await run_test_with_store(session, "A29 search_explore", "search_explore", {})
         await run_test_with_store(session, "A30 search_cities", "search_cities", {})
-        await run_test_with_store(session, "A31 empty_trash", "empty_trash", {})
-        await run_test_with_store(session, "A32 restore_trash", "restore_trash", {})
 
         # =========================================================================
         # Phase 2: List Tools (9 tests: B2)
@@ -536,8 +554,8 @@ async def main():
         log("\n=== Phase 6: Tag Relationship Tools ===")
         await run_test_with_store(session, "F0 create_rel_tag", "create_tag",
             {"name": make_name("RelTag")}, store_key="create_rel_tag")
-        await run_test(session, "F1 upsert_tags", "upsert_tags",
-            {"tags": [make_name("UpsertTag")]})
+        await run_test_with_store(session, "F1 upsert_tags", "upsert_tags",
+            {"tags": [make_name("UpsertTag")]}, store_key="upserted_tag")
         await run_test(session, "F2 tag_assets", "tag_assets",
             {"tagIds": [pick_id("create_rel_tag")], "assetIds": [ASSET_IDS[0]]})
         await run_test(session, "F3 tag_assets_by_tag", "tag_assets_by_tag",
@@ -637,13 +655,14 @@ async def main():
              "targetId": ASSET_IDS[1] if len(ASSET_IDS) > 1 else ASSET_IDS[0]})
         await run_test(session, "K22 list_all_assets", "list_all_assets",
             {"page": 1, "size": 5})
-        await run_test(session, "K23 upload_asset", "upload_asset",
+        await run_test_with_store(session, "K23 upload_asset", "upload_asset",
             {"base64_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
              "deviceAssetId": "web-test_upload-1234567890",
              "deviceId": "WEB",
              "fileCreatedAt": "2026-06-22T15:00:00+00:00",
              "fileModifiedAt": "2026-06-22T15:00:00+00:00",
-             "filename": "test_upload.png"})
+             "filename": "test_upload.png"},
+            store_key="uploaded_test_asset")
 
         # =========================================================================
         # Phase 12: Face Tools (3 tests: L1-L3)
@@ -700,11 +719,8 @@ async def main():
             {"id": pick_id("my_user_info")})
         await run_test(session, "P2 update_my_user", "update_my_user",
             {"name": make_name("UpdatedUser")})
-        await run_test(session, "P3 update_my_preferences", "update_my_preferences",
-            {"ratings_enabled": True})
         await run_test(session, "P4 get_user_profile_image_url", "get_user_profile_image_url",
             {"id": pick_id("my_user_info")})
-        await run_test(session, "P5 delete_my_onboarding", "delete_my_onboarding", {})
 
         # =========================================================================
         # Phase 17: Trash Tools (1 test: Q1)
@@ -738,6 +754,38 @@ async def main():
         log("\n=== Cleanup: Delete Test User ===")
         await run_test(session, "Z9 delete_test_user", "delete_user",
                        {"id": test_user_id})
+
+        # =========================================================================
+        # Cleanup: Delete Test-Created Resources
+        # Deletes only what this run created; pre-existing content is untouched.
+        # =========================================================================
+        log("\n=== Cleanup: Delete Test-Created Resources ===")
+        await run_test(session, "Z7 delete_fresh_stack", "delete_stack_by_id",
+            {"id": pick_id("fresh_stack")})
+        await run_test(session, "Z7 delete_fresh_memory", "delete_memory_by_id",
+            {"id": pick_id("fresh_memory")})
+        await run_test(session, "Z7 delete_rel_library", "delete_library_by_id",
+            {"id": pick_id("create_rel_library")})
+        await run_test(session, "Z7 delete_rel_person", "delete_person_by_id",
+            {"id": pick_id("create_rel_person")})
+        await run_test(session, "Z7 delete_rel_tag", "delete_tag_by_id",
+            {"id": pick_id("create_rel_tag")})
+        await run_test(session, "Z7 delete_upserted_tag", "delete_tag_by_id",
+            {"id": pick_first_face_id("upserted_tag")})
+        await run_test(session, "Z7 delete_uploaded_asset", "delete_assets",
+            {"ids": [pick_id("uploaded_test_asset")], "force": True})
+        _fixture_ids = [i for i in ASSET_IDS if i != FAKE_UUID]
+        if _fixture_ids:
+            await run_test(session, "Z7 delete_fixture_assets", "delete_assets",
+                {"ids": _fixture_ids, "force": True})
+
+        # =========================================================================
+        # Cleanup: Restore Real Admin Identity
+        # P2 update_my_user temporarily renamed the authenticated user; put it back.
+        # =========================================================================
+        await run_test(session, "Z8 restore_admin_identity", "update_my_user",
+            {"name": pick_field("my_user_info", "name"),
+             "email": pick_field("my_user_info", "email")})
 
         # =========================================================================
         # Report Summary
